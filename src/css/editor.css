@@ -56,8 +56,11 @@
   align-items: center;
   justify-content: center;
 
+  width: 100%;
+  max-width: 100%;
   min-height: 100%;
   padding: 32px;
+  box-sizing: border-box;
 
   background:
     radial-gradient(circle at center,
@@ -72,6 +75,8 @@
 .editor-empty-card {
   display: flex;
   width: min(100%, 460px);
+  max-width: 100%;
+  box-sizing: border-box;
   flex-direction: column;
   align-items: center;
 
@@ -247,7 +252,11 @@
 
 @media (max-width: 640px) {
   .editor-empty-state {
-    padding: 20px;
+    padding: 12px;
+  }
+
+  .editor-empty-card {
+    padding: 20px 14px;
   }
 
   .editor-empty-actions {
@@ -256,7 +265,8 @@
   }
 
   .editor-empty-button {
-    width: min(100%, 320px);
+    width: 100%;
+    max-width: 100%;
   }
 
   .editor-empty-actions kbd {
@@ -407,8 +417,9 @@
 
   width: auto;
   height: auto;
-  max-width: calc(100vw - 620px);
+  max-width: 100%;
   max-height: calc(100vh - 190px);
+  box-sizing: border-box;
 
   border-radius: 5px;
 
@@ -417,12 +428,6 @@
   cursor: crosshair;
   user-select: none;
   touch-action: none;
-}
-
-@media (max-width: 1100px) {
-  #imageCanvas {
-    max-width: calc(100vw - 260px);
-  }
 }
 
 @media (max-width: 760px) {
@@ -441,11 +446,11 @@
   }
 
   .editor-canvas-viewport {
-    padding: 20px;
+    padding: 12px;
   }
 
   #imageCanvas {
-    max-width: calc(100vw - 120px);
+    max-width: 100%;
     max-height: calc(100vh - 160px);
   }
 }
@@ -1282,9 +1287,12 @@ body {
   ekran dışına taşmasını engeller.
 */
 #editorWorkspace {
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /*
@@ -1335,6 +1343,7 @@ body {
 .editor-canvas-viewport {
   display: flex;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   min-height: 0;
   flex: 1 1 auto;
@@ -1350,12 +1359,15 @@ body {
 
 .editor-canvas-wrapper {
   display: flex;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   min-height: 0;
   align-items: center;
   justify-content: center;
 
   margin: auto;
+  box-sizing: border-box;
 }
 
 /*
@@ -1370,6 +1382,7 @@ body {
 
   max-width: 100%;
   max-height: calc(100vh - 190px);
+  box-sizing: border-box;
 
   object-fit: contain;
 }
@@ -1377,11 +1390,20 @@ body {
 /* Sağ panel ekran yüksekliğini aşmaz. */
 #sensitiveDataPanel {
   display: flex;
-  min-width: 280px;
+  min-width: 0;
   min-height: 0;
   max-height: 100%;
   flex-direction: column;
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+@media (min-width: 1024px) {
+  #sensitiveDataPanel {
+    width: 20rem;
+    max-width: 20rem;
+    flex: 0 0 20rem;
+  }
 }
 
 .real-detection-panel-header,
@@ -1436,16 +1458,17 @@ body {
 
 @media (max-width: 900px) {
   #sensitiveDataPanel {
-    min-width: 250px;
-    width: 280px;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
   }
 
   #activeFileName {
-    max-width: 220px;
+    max-width: min(220px, 55vw);
   }
 
   .editor-canvas-viewport {
-    padding: 12px;
+    padding: 10px;
   }
 }
 
@@ -1454,6 +1477,18 @@ body {
   padding-right: 20px;
   padding-bottom: 28px;
   padding-left: 20px;
+}
+
+@media (max-width: 900px) {
+  .editor-canvas-viewport {
+    padding: 10px;
+  }
+}
+
+@media (max-width: 639px) {
+  .editor-canvas-viewport {
+    padding: 8px;
+  }
 }
 
 #imageCanvas {
@@ -2903,38 +2938,63 @@ body > header .bg-primary-container {
   }
 
   body > header {
-    padding-left: 12px;
-    padding-right: 12px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 3.5rem;
+    row-gap: 8px;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box;
+    max-width: 100vw;
   }
 
   body > header a[aria-label="Go to Redaktix home page"] {
-    flex: 0 0 auto;
-    min-width: max-content;
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
   body > header a[aria-label="Go to Redaktix home page"] span {
     white-space: nowrap;
-    overflow: visible;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body > header > div:last-child {
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  body > header > div:last-child > button {
+    flex: 0 1 auto;
+    min-width: 0;
   }
 }
 
 @media (max-width: 1023px) {
   .editor-shell {
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
     height: calc(100vh - 3.5rem);
     overflow-x: hidden;
     overflow-y: auto;
+    box-sizing: border-box;
   }
 
   .editor-shell > aside[aria-label="Drawing tools"] {
     flex-direction: row;
     align-items: center;
     width: 100%;
+    max-width: 100%;
     height: auto;
     flex: 0 0 auto;
     border-right: 0;
     border-bottom: 1px solid rgba(148, 163, 184, 0.28);
-    padding: 8px 12px;
+    padding: 8px 10px;
+    box-sizing: border-box;
   }
 
   .editor-shell > aside[aria-label="Drawing tools"] > div {
@@ -2948,31 +3008,49 @@ body > header .bg-primary-container {
 
   #editorWorkspace {
     width: 100%;
+    max-width: 100%;
     flex: 1 0 360px;
     min-width: 0;
     min-height: 360px;
+    box-sizing: border-box;
+  }
+
+  .editor-canvas-viewport,
+  .editor-canvas-wrapper {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .editor-canvas-wrapper {
+    width: 100%;
+    min-width: 0;
+    height: auto;
   }
 
   #sensitiveDataPanel {
     width: 100%;
     min-width: 0;
-    max-width: none;
+    max-width: 100%;
     flex: 0 0 auto;
     min-height: 240px;
     max-height: none;
     border-left: 0;
     border-top: 1px solid rgba(148, 163, 184, 0.28);
+    box-sizing: border-box;
   }
 
   .editor-empty-state {
-    padding: 16px;
+    padding: 12px;
+    box-sizing: border-box;
   }
 
   .editor-empty-card {
     width: 100%;
     max-width: 100%;
     box-sizing: border-box;
-    padding: 24px 16px;
+    padding: 20px 14px;
   }
 
   .editor-empty-state h1 {
@@ -3028,7 +3106,11 @@ body > header .bg-primary-container {
   body {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    max-width: 100vw;
     height: 100dvh;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   body > header {
@@ -3039,7 +3121,10 @@ body > header .bg-primary-container {
     align-items: center;
     align-content: center;
     row-gap: 8px;
-    padding: 8px 12px 10px;
+    padding: 8px 10px 10px !important;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
   }
 
   body > header > div:first-child {
@@ -3055,24 +3140,46 @@ body > header .bg-primary-container {
   body > header > #toolIntensityBar {
     flex: 1 0 100%;
     min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   body > header > div:last-child {
     flex: 1 0 100%;
     justify-content: flex-end;
-    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  body > header .lang-switch {
+    flex: 0 0 auto;
   }
 
   body > header .lang-switch button {
-    min-width: 44px;
+    min-width: 40px;
     min-height: 40px;
-    padding: 8px 12px;
+    padding: 8px 10px;
     font-size: 13px;
   }
 
   body > header > div:last-child > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-height: 44px;
-    padding: 0 16px;
+    padding: 0 12px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  body > header > div:last-child > button span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   body > div {

@@ -1,8 +1,11 @@
 import "../css/fonts.css";
 import { registerRedaktixWorker } from "./pwa.js";
 import { startI18n, t } from "./i18n.js";
+import { initMarketingAnalytics } from "./marketing-analytics.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Marketing surfaces only — never imported by the editor/app bundle.
+  initMarketingAnalytics();
   const sectionLinks = {
     product: "#product",
     "how it works": "#how-it-works",
