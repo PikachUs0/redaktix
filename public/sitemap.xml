@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://redaktix.com/</loc></url>
+  <url><loc>https://redaktix.com/security/</loc></url>
+  <url><loc>https://redaktix.com/tools/</loc></url>
+  <url><loc>https://redaktix.com/tools/hide-api-key/</loc></url>
+  <url><loc>https://redaktix.com/tools/blur-email/</loc></url>
+  <url><loc>https://redaktix.com/tools/redact-phone-number/</loc></url>
+  <url><loc>https://redaktix.com/tools/hide-ip-address/</loc></url>
+  <url><loc>https://redaktix.com/tools/redact-credit-card/</loc></url>
+  <url><loc>https://redaktix.com/tools/hide-jwt-token/</loc></url>
+  <url><loc>https://redaktix.com/tr/tckn-gizle/</loc></url>
+  <url><loc>https://redaktix.com/tr/ekran-goruntusu-telefon-gizle/</loc></url>
+</urlset>

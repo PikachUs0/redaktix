@@ -1,0 +1,186 @@
+:root {
+  color-scheme: light;
+
+  /* Brand colors */
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-soft: #dbeafe;
+  --color-primary-text: #ffffff;
+
+  /* Privacy and success colors */
+  --color-success: #059669;
+  --color-success-hover: #047857;
+  --color-success-soft: #d1fae5;
+  --color-success-text: #064e3b;
+
+  /* Detection and warning colors */
+  --color-warning: #ea580c;
+  --color-warning-hover: #c2410c;
+  --color-warning-soft: #ffedd5;
+  --color-warning-text: #9a3412;
+
+  /* Error colors */
+  --color-error: #dc2626;
+  --color-error-soft: #fee2e2;
+  --color-error-text: #991b1b;
+
+  /* Page surfaces */
+  --color-background: #fafbff;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f4f6fb;
+  --color-surface-tertiary: #e9eef9;
+  --color-surface-elevated: #ffffff;
+
+  /* Text colors */
+  --color-text: #131b2e;
+  --color-text-secondary: #4b5568;
+  --color-text-muted: #737b8c;
+  --color-text-inverse: #f8fafc;
+
+  /* Borders */
+  --color-border: #d9deea;
+  --color-border-subtle: #e9edf5;
+  --color-border-strong: #b8c0d1;
+
+  /* Editor workspace */
+  --color-editor-background: #0a0f1d;
+  --color-editor-grid: rgba(59, 130, 246, 0.16);
+  --color-editor-panel: #111827;
+  --color-editor-border: #243044;
+
+  /* Redaction colors */
+  --color-blackout: #000000;
+  --color-redaction-selection: #2563eb;
+  --color-detection: #f97316;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.07);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.09);
+  --shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.13);
+  --shadow-editor: 0 24px 60px rgba(0, 0, 0, 0.4);
+
+  /* Typography */
+  --font-primary: "Geist", "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  --font-mono: "JetBrains Mono", "SFMono-Regular", Consolas, "Liberation Mono",
+    monospace;
+
+  /* Font sizes */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+  --font-size-5xl: 3rem;
+  --font-size-hero: 3.5rem;
+
+  /* Line heights */
+  --line-height-tight: 1.1;
+  --line-height-heading: 1.2;
+  --line-height-body: 1.6;
+
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+  --radius-full: 9999px;
+
+  /* Layout */
+  --container-width: 76rem;
+  --header-height: 4rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Brand colors */
+  --color-primary: #3b82f6;
+  --color-primary-hover: #60a5fa;
+  --color-primary-soft: #172554;
+  --color-primary-text: #ffffff;
+
+  /* Privacy and success colors */
+  --color-success: #34d399;
+  --color-success-hover: #6ee7b7;
+  --color-success-soft: #052e27;
+  --color-success-text: #a7f3d0;
+
+  /* Detection and warning colors */
+  --color-warning: #fb923c;
+  --color-warning-hover: #fdba74;
+  --color-warning-soft: #431407;
+  --color-warning-text: #fed7aa;
+
+  /* Error colors */
+  --color-error: #f87171;
+  --color-error-soft: #450a0a;
+  --color-error-text: #fecaca;
+
+  /* Page surfaces */
+  --color-background: #0b0f19;
+  --color-surface: #111827;
+  --color-surface-secondary: #0f172a;
+  --color-surface-tertiary: #172033;
+  --color-surface-elevated: #182235;
+
+  /* Text colors */
+  --color-text: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-text-inverse: #131b2e;
+
+  /* Borders */
+  --color-border: #1e293b;
+  --color-border-subtle: #182235;
+  --color-border-strong: #334155;
+
+  /* Editor workspace */
+  --color-editor-background: #070b13;
+  --color-editor-grid: rgba(96, 165, 250, 0.14);
+  --color-editor-panel: #111827;
+  --color-editor-border: #253249;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.18);
+  --shadow-sm: 0 3px 10px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 20px 55px rgba(0, 0, 0, 0.42);
+  --shadow-editor: 0 28px 70px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --font-size-hero: 2.25rem;
+    --font-size-5xl: 2.25rem;
+    --font-size-4xl: 1.875rem;
+    --space-20: 4rem;
+    --space-24: 4.5rem;
+  }
+}

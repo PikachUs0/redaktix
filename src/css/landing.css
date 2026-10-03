@@ -1,0 +1,43 @@
+.redaktix-brand-icon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+
+  background: linear-gradient(
+    145deg,
+    #2563eb,
+    #3b82f6
+  );
+
+  color: #ffffff;
+
+  box-shadow:
+    0 5px 14px rgba(37, 99, 235, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.redaktix-brand-icon .material-symbols-outlined {
+  color: #ffffff;
+  font-size: 21px;
+
+  font-variation-settings:
+    "FILL" 1,
+    "wght" 500,
+    "GRAD" 0,
+    "opsz" 24;
+}
+
+.redaktix-brand-text {
+  color: inherit;
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}

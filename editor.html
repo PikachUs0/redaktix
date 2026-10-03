@@ -1,0 +1,137 @@
+
+<!DOCTYPE html>
+
+<html data-i18n-document-title="meta.editorTitle" lang="en" class="dark" data-theme="dark"><head><meta charset="utf-8"/><script>try{var k="redaktix-lang",s=localStorage.getItem(k),n=(navigator.language||"en").toLowerCase(),l=s==="tr"||s==="en"?s:n.startsWith("tr")?"tr":"en";document.documentElement.lang=l;}catch(e){}</script><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link rel="stylesheet" href="/src/css/editor.css"/><meta name="description" content="Redaktix editor. Redact sensitive data in screenshots on your device."/><title data-i18n="meta.editorTitle">Redaktix Editor</title><link rel="manifest" href="/manifest.webmanifest"/><meta name="theme-color" content="#0a0f1d"/><link rel="icon" href="/icons/icon-192.png"/>
+</head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 h-14 bg-surface-container-lowest border-b border-outline-variant/30 flex items-center justify-between px-gutter-md select-none"><div class="flex items-center gap-gutter-sm"><a
+  href="/"
+  class="flex items-center gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30"
+  aria-label="Go to Redaktix home page">
+
+  <span
+    class="font-headline-sm text-headline-sm text-on-surface font-semibold tracking-tight"
+  >
+    Redaktix
+  </span>
+</a></div><div class="editor-header-divider h-4 w-px bg-outline-variant mx-gutter-xs"></div><div class="editor-header-meta flex items-center gap-gutter-xs"><span class="font-body-sm text-body-sm text-on-surface font-medium hover:bg-surface-container-low px-gutter-xs py-0.5 rounded cursor-pointer transition-colors">customer-dashboard.png</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container/20 text-secondary font-label-code text-label-code font-medium"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><span data-i18n="editor.saved">Saved locally</span></span></div></div><div class="hidden md:flex items-center bg-surface-container-low border border-outline-variant/40 rounded-lg p-0.5 shadow-sm"><button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest rounded transition-colors" title="Undo (Ctrl+Z)" data-i18n-title="editor.undo" type="button"><span translate="no" class="material-symbols-outlined text-[18px] block">undo</span></button><button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest rounded transition-colors" title="Redo (Ctrl+Y)" data-i18n-title="editor.redo" type="button"><span translate="no" class="material-symbols-outlined text-[18px] block">redo</span></button><div class="h-3.5 w-px bg-outline-variant/40 mx-1"></div><button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest rounded transition-colors" title="Zoom Out" type="button"><span translate="no" class="material-symbols-outlined text-[18px] block">remove</span></button><span class="px-2 font-label-code text-label-code text-on-surface font-medium select-none">100%</span><button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest rounded transition-colors" title="Zoom In" type="button"><span translate="no" class="material-symbols-outlined text-[18px] block">add</span></button><div class="h-3.5 w-px bg-outline-variant/40 mx-1"></div><button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest rounded transition-colors" title="Fit to Screen" type="button"><span translate="no" class="material-symbols-outlined text-[18px] block">fit_screen</span></button><button class="p-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest rounded transition-colors" title="Reset View" type="button"><span translate="no" class="material-symbols-outlined text-[18px] block">restart_alt</span></button></div><div id="toolIntensityBar" class="tool-intensity-bar" hidden>
+<label for="toolIntensitySlider" id="toolIntensityLabel" data-i18n="editor.blur">Blur</label>
+<input id="toolIntensitySlider" type="range" min="1" max="50" step="1" value="10" aria-label="Blur radius">
+<output id="toolIntensityValue" for="toolIntensitySlider">10px</output>
+</div><div class="flex items-center gap-gutter-sm"><div class="local-processing-anchor"><a id="localProcessingBadge" class="local-processing-badge" href="/security/" data-i18n="badge.local">🟢 100% Local Processing (Zero Data Upload)</a><div id="localProcessingPopover" class="local-processing-popover" role="dialog" aria-label="Local processing" data-i18n-aria="badge.popover" hidden><p data-i18n="badge.popover">OCR runs in WebAssembly inside your browser. Recognition stays on this device and does not depend on an external network.</p></div></div><span id="offlineReadyBadge" class="offline-ready-badge" hidden data-i18n="badge.localFirst">100% Local-First Engine</span><div class="lang-switch" translate="no" role="group" aria-label="Language"><button type="button" data-set-lang="tr">TR</button><button type="button" data-set-lang="en">EN</button></div><div class="h-4 w-px bg-outline-variant mx-0.5 hidden sm:block"></div><button class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-outline-variant text-on-surface font-body-sm text-body-sm font-medium hover:bg-surface-container-low transition-colors shadow-sm" type="button"><span translate="no" class="material-symbols-outlined text-[16px]">content_copy</span><span data-i18n="editor.copy">Copy image</span></button><button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary-container text-on-primary-container font-body-sm text-body-sm font-medium hover:bg-primary transition-colors shadow-sm" type="button"><span translate="no" class="material-symbols-outlined text-[16px]">download</span><span data-i18n="editor.download">Download</span></button></div></header><div><main class="relative pt-14 w-full bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- PRIMARY WORKSPACE WRAPPER -->
+<div class="editor-shell relative flex h-[calc(100vh-3.5rem)] w-full overflow-hidden bg-surface">
+<!-- 1. LEFT TOOL RAIL (SUB-TOOLBAR) -->
+<aside class="relative z-20 flex w-14 shrink-0 flex-col items-center border-r border-outline-variant/40 bg-surface-container-lowest py-3 select-none" aria-label="Drawing tools">
+<div class="flex flex-col items-center gap-2">
+<button class="group relative flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-tool="select" title="Select (V)" data-i18n-title="editor.selectTitle" type="button">
+<span translate="no" class="material-symbols-outlined text-[20px]">near_me</span>
+<span class="absolute left-12 z-30 hidden rounded bg-inverse-surface px-2 py-1 font-label-code text-[11px] text-inverse-on-surface shadow-md group-hover:flex items-center gap-1.5 whitespace-nowrap">
+<span data-i18n="editor.select">Select</span><kbd translate="no" class="rounded bg-inverse-surface/80 px-1 py-0.5 text-[10px] text-surface-dim">V</kbd>
+</span>
+</button>
+<button class="group relative flex h-10 w-10 items-center justify-center rounded-lg text-on-surface is-tool-active" data-tool="blackout" aria-pressed="true" title="Blackout (B)" data-i18n-title="editor.blackoutTitle" type="button">
+<span translate="no" class="material-symbols-outlined text-[20px]">rectangle</span>
+<span class="absolute left-12 z-30 hidden rounded bg-inverse-surface px-2 py-1 font-label-code text-[11px] text-inverse-on-surface shadow-md group-hover:flex items-center gap-1.5 whitespace-nowrap">
+<span data-i18n="label.blackout">Blackout</span><kbd translate="no" class="rounded bg-inverse-surface/80 px-1 py-0.5 text-[10px] text-surface-dim">B</kbd>
+</span>
+</button>
+<button class="group relative flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-tool="blur" title="Blur (U)" data-i18n-title="editor.blurTitle" type="button">
+<span translate="no" class="material-symbols-outlined text-[20px]">water_drop</span>
+<span class="absolute left-12 z-30 hidden rounded bg-inverse-surface px-2 py-1 font-label-code text-[11px] text-inverse-on-surface shadow-md group-hover:flex items-center gap-1.5 whitespace-nowrap">
+<span data-i18n="editor.blur">Blur</span><kbd translate="no" class="rounded bg-inverse-surface/80 px-1 py-0.5 text-[10px] text-surface-dim">U</kbd>
+</span>
+</button>
+<button class="group relative flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" data-tool="pixelate" title="Pixelate (P)" data-i18n-title="editor.pixelateTitle" type="button">
+<span translate="no" class="material-symbols-outlined text-[20px]">grid_view</span>
+<span class="absolute left-12 z-30 hidden rounded bg-inverse-surface px-2 py-1 font-label-code text-[11px] text-inverse-on-surface shadow-md group-hover:flex items-center gap-1.5 whitespace-nowrap">
+<span data-i18n="editor.pixelate">Pixelate</span><kbd translate="no" class="rounded bg-inverse-surface/80 px-1 py-0.5 text-[10px] text-surface-dim">P</kbd>
+</span>
+</button>
+</div>
+<button class="group relative mt-auto flex h-10 w-10 items-center justify-center rounded-lg text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors" id="toggle-shortcuts-btn" title="Shortcuts" type="button">
+<span translate="no" class="material-symbols-outlined text-[20px]">keyboard</span>
+</button>
+</aside>
+<!-- 2. CENTRAL CANVAS WORKSPACE -->
+<section
+  id="editorWorkspace"
+  class="relative flex flex-1 flex-col overflow-hidden bg-[#0A0F1D] select-none"
+></section>
+<!-- 5. RIGHT DETECTION PANEL -->
+<aside
+  id="sensitiveDataPanel"
+  class="relative z-20 flex w-80 shrink-0 flex-col bg-surface-container-lowest border-l border-surface-container-low select-none"
+></aside>
+</div>
+<!-- 6. BOTTOM STATUS BAR -->
+<footer class="relative z-30 flex h-8 w-full items-center justify-between bg-surface-container-lowest px-4 border-t border-surface-container-low font-label-code text-[11px] text-on-surface-variant select-none">
+<div class="flex items-center gap-3">
+<span>1920 × 1080 px</span>
+<span class="h-3 w-px bg-surface-container-high"></span>
+<span>1.8 MB</span>
+<span class="h-3 w-px bg-surface-container-high"></span>
+<span>PNG 24-bit</span>
+</div>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="h-2 w-2 rounded-full bg-secondary"></span>
+<span class="font-medium">100% Client-Side Processing — No bytes leave this machine</span>
+</div>
+<div class="flex items-center gap-3">
+<span>Processing: <strong class="text-secondary font-semibold">Ready</strong></span>
+<span class="h-3 w-px bg-surface-container-high"></span>
+<span>Selected: 1 region</span>
+<span class="h-3 w-px bg-surface-container-high"></span>
+<span>Zoom: 100%</span>
+</div>
+</footer>
+<!-- 8. FLOATING SHORTCUTS DRAWER PILL & HINT BAR -->
+<div class="fixed bottom-10 right-84 z-50 flex items-center gap-3 rounded-full bg-inverse-surface/90 px-3.5 py-1.5 shadow-2xl backdrop-blur-md text-inverse-on-surface transition-all" id="shortcuts-bar">
+<span class="flex items-center gap-1 font-label-code text-[11px]">
+<kbd translate="no" class="rounded bg-white/10 px-1 text-[10px]">V</kbd> Select
+    </span>
+<span class="flex items-center gap-1 font-label-code text-[11px]">
+<kbd translate="no" class="rounded bg-white/10 px-1 text-[10px]">B</kbd> Blackout
+    </span>
+<span class="flex items-center gap-1 font-label-code text-[11px]">
+<kbd translate="no" class="rounded bg-white/10 px-1 text-[10px]">U</kbd> Blur
+    </span>
+<span class="flex items-center gap-1 font-label-code text-[11px]">
+<kbd translate="no" class="rounded bg-white/10 px-1 text-[10px]">P</kbd> Pixelate
+    </span>
+<span class="h-3 w-px bg-white/20"></span>
+<span class="flex items-center gap-1 font-label-code text-[11px] text-surface-dim">
+<kbd translate="no" class="rounded bg-white/10 px-1 text-[10px]">⌘Z</kbd> Undo
+    </span>
+<span class="flex items-center gap-1 font-label-code text-[11px] text-surface-dim">
+<kbd translate="no" class="rounded bg-white/10 px-1 text-[10px]">⌘C</kbd> Copy
+    </span>
+</div>
+<!-- Micro-interactions Script -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Tool switching micro-interactions
+      const toolButtons = document.querySelectorAll('[data-tool]');
+      toolButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          toolButtons.forEach(b => {
+            b.classList.remove('bg-primary-container', 'text-on-primary-container', 'shadow-sm', 'is-tool-active');
+            b.classList.add('text-on-surface-variant');
+            b.setAttribute('aria-pressed', 'false');
+          });
+          btn.classList.add('is-tool-active');
+          btn.classList.remove('text-on-surface-variant');
+          btn.setAttribute('aria-pressed', 'true');
+        });
+      });
+
+      // Keyboard shortcuts toggle drawer
+      const shortcutsBtn = document.getElementById('toggle-shortcuts-btn');
+      const shortcutsBar = document.getElementById('shortcuts-bar');
+      if (shortcutsBtn && shortcutsBar) {
+        shortcutsBtn.addEventListener('click', () => {
+          shortcutsBar.classList.toggle('hidden');
+        });
+      }
+    });
+  </script>
+</div></main></div><script type="module" src="/src/js/editor.js"></script>
+</body></html>
