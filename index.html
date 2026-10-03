@@ -1,1096 +1,1371 @@
 <!DOCTYPE html>
 
-<html data-i18n-document-title="meta.title" class="dark" lang="en" data-theme="dark"><head>
-<meta charset="utf-8"/>
-<script>try{var k="redaktix-lang",s=localStorage.getItem(k),n=(navigator.language||"en").toLowerCase(),l=s==="tr"||s==="en"?s:n.startsWith("tr")?"tr":"en";document.documentElement.lang=l;}catch(e){}</script>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title data-i18n="meta.title">Redaktix — Local-First Image & PII Redaction Tool</title>
-<meta name="description" content="Redact PII and blur sensitive areas in screenshots. Redaktix is local-first: images and OCR text stay in your browser and are not uploaded to a server."/>
-<link rel="canonical" href="https://redaktix.com/"/>
-<meta property="og:type" content="website"/>
-<meta property="og:site_name" content="Redaktix"/>
-<meta property="og:title" content="Redaktix — Local-First Image & PII Redaction Tool"/>
-<meta property="og:description" content="Redact PII and blur sensitive areas in screenshots. Redaktix is local-first: images and OCR text stay in your browser and are not uploaded to a server."/>
-<meta property="og:url" content="https://redaktix.com/"/>
-<meta property="og:image" content="https://redaktix.com/icons/icon-512.png"/>
-<meta property="og:image:alt" content="Redaktix logo"/>
-<meta property="og:image:width" content="512"/>
-<meta property="og:image:height" content="512"/>
-<meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Redaktix — Local-First Image & PII Redaction Tool"/>
-<meta name="twitter:description" content="Redact PII and blur sensitive areas in screenshots. Redaktix is local-first: images and OCR text stay in your browser and are not uploaded to a server."/>
-<meta name="twitter:image" content="https://redaktix.com/icons/icon-512.png"/>
-<meta name="twitter:image:alt" content="Redaktix logo"/>
-<link rel="manifest" href="/manifest.webmanifest"/>
-<meta name="theme-color" content="#0a0f1d"/>
-<!-- First-party cookieless marketing analytics only (same-origin). Leave empty to disable. Never used by editor.html. -->
-<meta name="redaktix-analytics-endpoint" content=""/>
-<link rel="icon" href="/icons/icon-192.png"/>
-<link rel="stylesheet" href="/src/css/theme.css"/>
+<html data-i18n-document-title="meta.title" class="dark" lang="en" data-theme="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <script>try { var k = "redaktix-lang", s = localStorage.getItem(k), n = (navigator.language || "en").toLowerCase(), l = s === "tr" || s === "en" ? s : n.startsWith("tr") ? "tr" : "en"; document.documentElement.lang = l; } catch (e) { }</script>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title data-i18n="meta.title">Redaktix — Local-First Image & PII Redaction Tool</title>
+  <meta name="description"
+    content="Redact PII and blur sensitive areas in screenshots. Redaktix is local-first: images and OCR text stay in your browser and are not uploaded to a server." />
+  <link rel="canonical" href="https://redaktix.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Redaktix" />
+  <meta property="og:title" content="Redaktix — Local-First Image & PII Redaction Tool" />
+  <meta property="og:description"
+    content="Redact PII and blur sensitive areas in screenshots. Redaktix is local-first: images and OCR text stay in your browser and are not uploaded to a server." />
+  <meta property="og:url" content="https://redaktix.com/" />
+  <meta property="og:image" content="https://redaktix.com/icons/icon-512.png" />
+  <meta property="og:image:alt" content="Redaktix logo" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Redaktix — Local-First Image & PII Redaction Tool" />
+  <meta name="twitter:description"
+    content="Redact PII and blur sensitive areas in screenshots. Redaktix is local-first: images and OCR text stay in your browser and are not uploaded to a server." />
+  <meta name="twitter:image" content="https://redaktix.com/icons/icon-512.png" />
+  <meta name="twitter:image:alt" content="Redaktix logo" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <meta name="theme-color" content="#0a0f1d" />
+  <!-- First-party cookieless marketing analytics only (same-origin). Leave empty to disable. Never used by editor.html. -->
+  <meta name="redaktix-analytics-endpoint" content="" />
+  <link rel="icon" href="/icons/icon-192.png" />
+  <link rel="stylesheet" href="/src/css/theme.css" />
+  <!-- Vercel Web Analytics (Landing Page Only) -->
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
-<body class="bg-[#0B0F19] text-[#F8FAFC] font-inter antialiased min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
-<!-- ==================== NAVIGATION ==================== -->
-<header class="fixed top-0 left-0 right-0 z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-[#1E293B]">
-<div class="h-16 max-w-[76rem] mx-auto px-4 md:px-8 flex items-center justify-between gap-4">
-<!-- Brand Logo -->
-<div class="flex items-center gap-3">
-<a class="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 rounded-lg p-1 transition-transform hover:scale-[1.02]" data-path="home" href="/editor.html">
-<div class="w-8 h-8 flex items-center justify-center shrink-0">
-<img alt="Redaktix logo" class="w-full h-full object-contain" src="/icons/icon-192.png"/>
-</div>
-<span class="font-geist text-lg tracking-tight font-semibold text-[#F8FAFC]">Redaktix</span>
-</a>
-</div>
-<!-- Center Navigation Links -->
-<nav class="hidden lg:flex items-center gap-8 text-sm font-medium">
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="product" href="/editor.html#product" data-i18n="nav.product">Product</a>
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="how-it-works" href="/editor.html#how-it-works" data-i18n="nav.how">How It Works</a>
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="use-cases" href="/editor.html#use-cases" data-i18n="nav.useCases">Use Cases</a>
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="security" href="/editor.html#security" data-i18n="nav.security">Security</a>
-</nav>
-<!-- Right Side Actions -->
-<div class="flex items-center gap-3">
-<div class="local-processing-anchor">
-<a id="localProcessingBadge" class="local-processing-badge" href="/security/" data-i18n="badge.local">🟢 100% Local Processing (Zero Data Upload)</a>
-<div id="localProcessingPopover" class="local-processing-popover" role="dialog" aria-label="Local processing" data-i18n-aria="badge.popover" hidden>
-<p data-i18n="badge.popover">OCR runs in WebAssembly inside your browser. Recognition stays on this device and does not depend on an external network.</p>
-</div>
-</div>
-<span id="offlineReadyBadge" class="offline-ready-badge" hidden data-i18n="badge.localFirst">100% Local-First Engine</span>
-<div class="lang-switch" translate="no" role="group" aria-label="Language"><button type="button" data-set-lang="tr">TR</button><button type="button" data-set-lang="en">EN</button></div><a class="text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400/50" data-path="register" href="/editor.html">
-<span data-i18n="nav.tryFree">Try It Free</span>
-</a>
-<!-- Mobile Menu Toggle Button -->
-<button aria-label="Toggle navigation menu" data-i18n-aria="nav.menu" class="lg:hidden w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC] flex items-center justify-center transition-colors focus:outline-none" id="mobileMenuBtn">
-<span translate="no" class="material-symbols-outlined text-[22px]">menu</span>
-</button>
-</div>
-</div>
-<!-- Mobile Dropdown Navigation -->
-<div class="hidden lg:hidden bg-[#0F172A] border-b border-[#1E293B] px-6 py-4 space-y-3" id="mobileMenu">
-<a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#product" data-i18n="nav.product">Product</a>
-<a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#how-it-works" data-i18n="nav.how">How It Works</a>
-<a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#use-cases" data-i18n="nav.useCases">Use Cases</a>
-<a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#security" data-i18n="nav.security">Security</a>
-<div class="pt-3 border-t border-[#1E293B]">
-<a class="inline-flex text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-medium" href="/editor.html" data-i18n="nav.tryFree">Try It Free</a>
-</div>
-</div>
-</header>
-<!-- ==================== MAIN CONTENT ==================== -->
-<main class="w-full pt-16 bg-[#0B0F19] flex-grow">
-<div class="flex flex-col w-full">
-<!-- ==================== SECTION 1: HERO SECTION ==================== -->
-<section class="relative overflow-hidden pt-10 pb-16 lg:pt-16 lg:pb-24" id="product">
-<!-- Subtle top background glow -->
-<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-<!-- Hero Left Column -->
-<div class="lg:col-span-6 flex flex-col items-start gap-6">
-<!-- Trust Badge -->
-<div class="hero-trust-badge inline-flex max-w-full items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 shadow-sm text-xs font-mono font-medium">
-<span class="relative flex h-2 w-2">
-<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-<span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-</span>
-<span data-i18n="hero.trust">100% Local Processing • No Uploads</span>
-</div>
-<!-- Headline -->
-<h1 class="font-geist text-4xl sm:text-5xl lg:text-[54px] text-[#F8FAFC] tracking-tight leading-[1.1] font-bold" data-i18n="hero.title">
-              Share screenshots without exposing sensitive data.
-            </h1>
-<!-- Paragraph -->
-<p class="text-base sm:text-lg text-[#94A3B8] max-w-xl leading-relaxed" data-i18n="hero.subtitle">
-              Paste a screenshot, detect private information, and hide it before sharing. Everything runs locally in your browser with mathematical privacy isolation.
-            </p>
-<!-- CTAs -->
-<div class="flex flex-wrap items-center gap-4 pt-2 w-full sm:w-auto">
-<a class="inline-flex items-center justify-center gap-3 px-6 h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-200" href="/editor.html">
-<span translate="no" class="material-symbols-outlined text-[20px]">content_paste</span>
-<span data-i18n="hero.paste">Paste or upload a screenshot</span>
-<kbd translate="no" class="hidden sm:inline-block px-2 py-0.5 text-xs font-mono bg-blue-700/60 text-blue-100 rounded border border-blue-400/30">⌘V / Ctrl+V</kbd>
-</a>
-<a class="inline-flex items-center justify-center gap-2 px-5 h-12 bg-[#172033] hover:bg-[#1E293B] text-[#F8FAFC] border border-[#1E293B] rounded-xl font-medium transition-colors shadow-sm" href="#how-it-works">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[20px]">play_circle</span>
-<span data-i18n="hero.seeHow">See how it works</span>
-</a>
-</div>
-<!-- Micro-trust copy -->
-<div class="flex flex-wrap items-center gap-5 text-sm text-[#94A3B8] pt-1">
-<span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
-<span translate="no" class="material-symbols-outlined text-[18px]">check_circle</span>
-                <span data-i18n="hero.noAccount">No account required</span>
-              </span>
-<span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
-<span translate="no" class="material-symbols-outlined text-[18px]">verified_user</span>
-                <span data-i18n="hero.neverLeaves">Images never leave your device</span>
-              </span>
-</div>
-</div>
-<!-- Hero Right Column: Interactive Mockup Window -->
-<div class="lg:col-span-6 relative">
-<div class="relative rounded-2xl bg-[#111827] border border-[#1E293B] shadow-2xl shadow-black/60 overflow-hidden">
-<!-- Window Titlebar -->
-<div class="bg-[#0F172A] border-b border-[#1E293B] px-4 py-3 flex items-center justify-between">
-<div class="flex items-center gap-2">
-<div class="w-3 h-3 rounded-full bg-[#EF4444]"></div>
-<div class="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
-<div class="w-3 h-3 rounded-full bg-[#10B981]"></div>
-</div>
-<div class="flex items-center gap-1.5 text-xs font-mono text-[#94A3B8] bg-[#172033] px-3 py-1 rounded-md border border-[#1E293B]">
-<span translate="no" class="material-symbols-outlined text-[14px] text-blue-400">image</span>
-<span>screenshot_2025_05_auth_flow.png</span>
-</div>
-<div class="flex items-center gap-2 text-[#64748B]">
-<span translate="no" class="material-symbols-outlined text-[18px] hover:text-[#94A3B8] cursor-pointer">crop</span>
-<span translate="no" class="material-symbols-outlined text-[18px] hover:text-[#94A3B8] cursor-pointer">zoom_in</span>
-</div>
-</div>
-<!-- Redaction Sandbox Canvas -->
-<div class="p-5 md:p-6 bg-[#111827] relative min-h-[380px] flex flex-col justify-between select-none">
-<!-- Floating Top-Right Detection Banner -->
-<div class="absolute top-4 right-4 z-20 flex items-center gap-2.5 bg-[#172033]/95 border border-[#1E293B] backdrop-blur-md px-3.5 py-2 rounded-xl shadow-lg">
-<div class="flex items-center gap-1.5">
-<span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
-<span class="font-mono text-xs font-semibold text-[#F8FAFC]" data-i18n="mock.found">3 sensitive items found</span>
-</div>
-<span class="text-emerald-300 font-mono text-[11px] bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-full font-medium" data-i18n="mock.processed">Processed locally</span>
-<a class="bg-blue-600 text-white text-xs font-mono font-medium px-2.5 py-1 rounded-lg hover:bg-blue-500 transition-colors" href="/editor.html" data-i18n="editor.hideAll">
-                    Hide all
-                  </a>
-</div>
-<!-- Ticket Internal UI Mockup -->
-<div class="space-y-4 pt-10">
-<!-- Header inside ticket -->
-<div class="flex items-center justify-between pb-3 bg-[#0F172A] border border-[#1E293B] p-3.5 rounded-xl">
-<div class="flex items-center gap-3">
-<!-- Profile avatar with Pixelation Effect -->
-<div class="relative w-11 h-11 rounded-lg overflow-hidden border border-[#1E293B] bg-[#1E293B] flex items-center justify-center">
-<div class="absolute inset-0 grid grid-cols-4 grid-rows-4 opacity-75">
-<div class="bg-slate-700"></div><div class="bg-blue-600/60"></div><div class="bg-slate-800"></div><div class="bg-slate-600"></div>
-<div class="bg-blue-500/50"></div><div class="bg-slate-900"></div><div class="bg-blue-600"></div><div class="bg-slate-700"></div>
-<div class="bg-slate-800"></div><div class="bg-blue-400/40"></div><div class="bg-slate-600"></div><div class="bg-slate-800"></div>
-<div class="bg-slate-700"></div><div class="bg-slate-900"></div><div class="bg-blue-700"></div><div class="bg-slate-700"></div>
-</div>
-<span translate="no" class="material-symbols-outlined text-[15px] text-blue-300 z-10">blur_on</span>
-</div>
-<div>
-<div class="font-geist text-sm font-semibold text-[#F8FAFC]" data-i18n="mock.ticket">Support Ticket #TK-8492</div>
-<div class="font-mono text-xs text-[#94A3B8]" data-i18n="mock.opened">Opened by User ID #USR-9921</div>
-</div>
-</div>
-<span class="px-2.5 py-1 bg-red-950/50 border border-red-500/30 rounded-full font-mono text-[11px] text-red-300 font-medium" data-i18n="mock.priority">Priority High</span>
-</div>
-<!-- Customer Details Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<!-- Email Detection Field with Amber Box -->
-<div class="relative p-3 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col gap-1">
-<span class="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8]" data-i18n="mock.customerEmail">Customer Email</span>
-<div class="relative mt-1">
-<span class="font-mono text-xs text-[#F8FAFC] font-medium">sarah.connor@acmecorp.com</span>
-<!-- Amber Detection Frame -->
-<div class="absolute -inset-1.5 rounded-md bg-orange-500/10 ring-2 ring-orange-500 flex items-center justify-end px-1.5 pointer-events-none">
-<span class="font-mono text-[10px] bg-orange-600 text-white font-semibold px-1.5 py-0.5 rounded shadow-xs">
-                            Email Detected (99%)
-                          </span>
-</div>
-</div>
-</div>
-<!-- API Token with crisp Solid Blackout Redaction -->
-<div class="relative p-3 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col gap-1">
-<span class="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8]" data-i18n="mock.apiKey">Connected Stripe API Key</span>
-<div class="relative mt-1">
-<span class="font-mono text-xs text-transparent select-none">sk_live_948194819482910</span>
-<!-- Solid Blackout Overlay -->
-<div class="absolute inset-0 bg-[#05070B] border border-[#1E293B] rounded-md flex items-center justify-between px-2.5 shadow-inner">
-<div class="flex items-center gap-1.5">
-<span translate="no" class="material-symbols-outlined text-[13px] text-emerald-400">lock</span>
-<span class="font-mono text-[10px] tracking-wider text-[#94A3B8]">BLACKOUT_REDACTION</span>
-</div>
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-</div>
-</div>
-</div>
-</div>
-<!-- IP Address Log snippet -->
-<div class="p-3 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span translate="no" class="material-symbols-outlined text-[16px] text-[#64748B]">terminal</span>
-<span class="font-mono text-xs text-[#94A3B8]">Origin Client IP:</span>
-<span class="font-mono text-xs text-[#F8FAFC] bg-[#1E293B] px-2 py-0.5 rounded">192.168.1.104</span>
-</div>
-<a class="text-blue-400 hover:text-blue-300 font-mono text-xs font-medium inline-flex items-center gap-1 transition-colors" href="/editor.html">
-<span translate="no" class="material-symbols-outlined text-[14px]">shield</span> <span data-i18n="mock.redact">Redact</span>
-                    </a>
-</div>
-</div>
-<!-- Quick action bar bottom inside mockup -->
-<div class="mt-4 pt-3 flex items-center justify-between text-xs text-[#94A3B8] bg-[#0F172A] border border-[#1E293B] px-3.5 py-2.5 rounded-xl">
-<div class="flex items-center gap-2">
-<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-<span class="font-mono text-[11px]" data-i18n="mock.engine">WebAssembly Engine: Active</span>
-</div>
-<div class="flex items-center gap-2">
-<span class="font-mono text-[11px] text-blue-400 font-medium" data-i18n="mock.ready">Ready to Export</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 2: INTERACTIVE UPLOAD AREA ==================== -->
-<section class="pb-16 lg:pb-20">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="relative rounded-3xl bg-[#111827] border-2 border-dashed border-[#2A374A] hover:border-blue-500/60 p-8 md:p-14 shadow-xl transition-all duration-300 text-center flex flex-col items-center justify-center cursor-pointer group">
-<!-- Floating Subtle Gradient Backdrop Accent -->
-<div class="absolute inset-0 bg-gradient-to-b from-blue-600/5 via-transparent to-transparent rounded-3xl pointer-events-none"></div>
-<div class="relative z-10 flex flex-col items-center max-w-xl">
-<!-- Blue Icon Container -->
-<div class="w-16 h-16 rounded-2xl bg-[#172033] border border-[#1E293B] flex items-center justify-center mb-6 group-hover:scale-105 group-hover:border-blue-500/40 transition-transform duration-200">
-<span translate="no" class="material-symbols-outlined text-[34px] text-blue-400">cloud_upload</span>
-</div>
-<!-- Main Title & Instructions -->
-<h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold tracking-tight" data-i18n="drop.title">
-              Drop a screenshot here
-            </h2>
-<p class="text-base text-[#94A3B8] mt-2 mb-6" data-i18n="drop.subtitle">
-              or paste directly from your clipboard anywhere on this page
-            </p>
-<!-- Buttons & Shortcuts -->
-<div class="flex flex-wrap items-center justify-center gap-3 mb-6">
-<a class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium shadow-md shadow-blue-600/20 transition-all flex items-center gap-2" href="/editor.html">
-<span translate="no" class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
-<span data-i18n="drop.choose">Choose an image</span>
-</a>
-<div class="px-4 py-2.5 bg-[#172033] border border-[#1E293B] text-[#F8FAFC] rounded-xl font-mono text-xs flex items-center gap-2">
-<span translate="no" class="material-symbols-outlined text-[16px] text-[#94A3B8]">keyboard</span>
-<span>Ctrl + V / ⌘V</span>
-</div>
-<div class="px-3.5 py-2.5 bg-[#172033] border border-[#1E293B] text-[#94A3B8] rounded-xl font-mono text-xs">
-                PNG, JPG, WebP
+
+<body
+  class="bg-[#0B0F19] text-[#F8FAFC] font-inter antialiased min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+  <!-- ==================== NAVIGATION ==================== -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-[#0B0F19]/80 backdrop-blur-md border-b border-[#1E293B]">
+    <div class="h-16 max-w-[76rem] mx-auto px-4 md:px-8 flex items-center justify-between gap-4">
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <a class="flex items-center gap-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/30 rounded-lg p-1 transition-transform hover:scale-[1.02]"
+          data-path="home" href="/editor.html">
+          <div class="w-8 h-8 flex items-center justify-center shrink-0">
+            <img alt="Redaktix logo" class="w-full h-full object-contain" src="/icons/icon-192.png" />
+          </div>
+          <span class="font-geist text-lg tracking-tight font-semibold text-[#F8FAFC]">Redaktix</span>
+        </a>
+      </div>
+      <!-- Center Navigation Links -->
+      <nav class="hidden lg:flex items-center gap-8 text-sm font-medium">
+        <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="product" href="/editor.html#product"
+          data-i18n="nav.product">Product</a>
+        <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="how-it-works"
+          href="/editor.html#how-it-works" data-i18n="nav.how">How It Works</a>
+        <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="use-cases"
+          href="/editor.html#use-cases" data-i18n="nav.useCases">Use Cases</a>
+        <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="security"
+          href="/editor.html#security" data-i18n="nav.security">Security</a>
+      </nav>
+      <!-- Right Side Actions -->
+      <div class="flex items-center gap-3">
+        <div class="local-processing-anchor">
+          <a id="localProcessingBadge" class="local-processing-badge" href="/security/" data-i18n="badge.local">🟢 100%
+            Local Processing (Zero Data Upload)</a>
+          <div id="localProcessingPopover" class="local-processing-popover" role="dialog" aria-label="Local processing"
+            data-i18n-aria="badge.popover" hidden>
+            <p data-i18n="badge.popover">OCR runs in WebAssembly inside your browser. Recognition stays on this device
+              and does not depend on an external network.</p>
+          </div>
+        </div>
+        <span id="offlineReadyBadge" class="offline-ready-badge" hidden data-i18n="badge.localFirst">100% Local-First
+          Engine</span>
+        <div class="lang-switch" translate="no" role="group" aria-label="Language"><button type="button"
+            data-set-lang="tr">TR</button><button type="button" data-set-lang="en">EN</button></div><a
+          class="text-sm bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-xl shadow-sm transition-all duration-200 flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-blue-400/50"
+          data-path="register" href="/editor.html">
+          <span data-i18n="nav.tryFree">Try It Free</span>
+        </a>
+        <!-- Mobile Menu Toggle Button -->
+        <button aria-label="Toggle navigation menu" data-i18n-aria="nav.menu"
+          class="lg:hidden w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-[#94A3B8] hover:text-[#F8FAFC] flex items-center justify-center transition-colors focus:outline-none"
+          id="mobileMenuBtn">
+          <span translate="no" class="material-symbols-outlined text-[22px]">menu</span>
+        </button>
+      </div>
+    </div>
+    <!-- Mobile Dropdown Navigation -->
+    <div class="hidden lg:hidden bg-[#0F172A] border-b border-[#1E293B] px-6 py-4 space-y-3" id="mobileMenu">
+      <a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#product"
+        data-i18n="nav.product">Product</a>
+      <a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#how-it-works"
+        data-i18n="nav.how">How It Works</a>
+      <a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#use-cases"
+        data-i18n="nav.useCases">Use Cases</a>
+      <a class="block text-sm text-[#94A3B8] hover:text-[#F8FAFC] py-1.5 font-medium" href="/editor.html#security"
+        data-i18n="nav.security">Security</a>
+      <div class="pt-3 border-t border-[#1E293B]">
+        <a class="inline-flex text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-medium" href="/editor.html"
+          data-i18n="nav.tryFree">Try It Free</a>
+      </div>
+    </div>
+  </header>
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="w-full pt-16 bg-[#0B0F19] flex-grow">
+    <div class="flex flex-col w-full">
+      <!-- ==================== SECTION 1: HERO SECTION ==================== -->
+      <section class="relative overflow-hidden pt-10 pb-16 lg:pt-16 lg:pb-24" id="product">
+        <!-- Subtle top background glow -->
+        <div
+          class="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none -z-10">
+        </div>
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <!-- Hero Left Column -->
+            <div class="lg:col-span-6 flex flex-col items-start gap-6">
+              <!-- Trust Badge -->
+              <div
+                class="hero-trust-badge inline-flex max-w-full items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 shadow-sm text-xs font-mono font-medium">
+                <span class="relative flex h-2 w-2">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                </span>
+                <span data-i18n="hero.trust">100% Local Processing • No Uploads</span>
               </div>
-</div>
-<!-- Privacy Guarantee Banner -->
-<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-medium">
-<span translate="no" class="material-symbols-outlined text-[16px] text-emerald-400">lock</span>
-<span data-i18n="drop.stays">Your image stays on this device • zero bytes sent to servers</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 3: PRIVACY TRUST STRIP ==================== -->
-<section class="pb-16 lg:pb-24">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<!-- Centered callout headline -->
-<div class="text-center mb-10">
-<h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold tracking-tight" data-i18n="trust.title">
-            Your screenshots never leave your device.
-          </h2>
-<p class="text-base text-[#94A3B8] mt-2" data-i18n="trust.subtitle">
-            Cryptographically sandboxed client-side architecture verified by design.
-          </p>
-</div>
-<!-- 4-Column Card Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-<!-- Item 1 -->
-<div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
-<div class="w-11 h-11 rounded-xl bg-[#172033] border border-[#1E293B] flex items-center justify-center text-blue-400">
-<span translate="no" class="material-symbols-outlined text-[22px]">cloud_off</span>
-</div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.noUploads">No File Uploads</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.noUploadsBody">
-              Zero cloud ingestion or network requests. Raw pixels remain strictly in device RAM.
-            </p>
-</div>
-<!-- Item 2 -->
-<div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
-<div class="w-11 h-11 rounded-xl bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-<span translate="no" class="material-symbols-outlined text-[22px]">memory</span>
-</div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.local">Local Browser Processing</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.localBody">
-              Compiled WebAssembly &amp; Web Workers run OCR and inference directly on your local CPU.
-            </p>
-</div>
-<!-- Item 3 -->
-<div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
-<div class="w-11 h-11 rounded-xl bg-[#172033] border border-[#1E293B] flex items-center justify-center text-blue-400">
-<span translate="no" class="material-symbols-outlined text-[22px]">auto_delete</span>
-</div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.noStorage">No Image Storage</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.noStorageBody">
-              Never cached, stored, or indexed anywhere. Closing your tab immediately clears all state.
-            </p>
-</div>
-<!-- Item 4 -->
-<div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
-<div class="w-11 h-11 rounded-xl bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-<span translate="no" class="material-symbols-outlined text-[22px]">wifi_off</span>
-</div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.offline">Works Offline</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.offlineBody">
-              Disconnect Wi-Fi or go into airplane mode. Every feature continues to run with zero lag.
-            </p>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 4: HOW IT WORKS ==================== -->
-<section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]" id="how-it-works">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="max-w-2xl mx-auto text-center mb-16">
-<span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold" data-i18n="how.eyebrow">Workflow</span>
-<h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2" data-i18n="how.title">
-            Three effortless steps to zero data leaks
-          </h2>
-<p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="how.subtitle">
-            Redact sensitive screens in seconds before posting into Slack, Jira, GitHub, or documentation.
-          </p>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-<!-- Step 1 -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-7 shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-5">
-<span class="w-8 h-8 rounded-lg bg-[#172033] border border-blue-500/30 text-blue-400 font-mono text-sm flex items-center justify-center font-bold">1</span>
-<span class="font-mono text-xs text-[#94A3B8]" data-i18n="how.stepLabel1">Step 01</span>
-</div>
-<h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="how.step1">Paste your screenshot</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="how.step1Body">
-                Upload, drag and drop, or paste directly from your clipboard without navigating file trees.
+              <!-- Headline -->
+              <h1
+                class="font-geist text-4xl sm:text-5xl lg:text-[54px] text-[#F8FAFC] tracking-tight leading-[1.1] font-bold"
+                data-i18n="hero.title">
+                Share screenshots without exposing sensitive data.
+              </h1>
+              <!-- Paragraph -->
+              <p class="text-base sm:text-lg text-[#94A3B8] max-w-xl leading-relaxed" data-i18n="hero.subtitle">
+                Paste a screenshot, detect private information, and hide it before sharing. Everything runs locally in
+                your browser with mathematical privacy isolation.
               </p>
-</div>
-<!-- Mini UI 1 -->
-<div class="p-3.5 rounded-xl bg-[#0F172A] border border-[#1E293B] flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span translate="no" class="material-symbols-outlined text-[18px] text-blue-400">content_paste_go</span>
-<span class="font-mono text-xs text-[#F8FAFC]" data-i18n="how.clipboard">Clipboard Active</span>
-</div>
-<span class="px-2 py-0.5 rounded bg-blue-600 text-white font-mono text-[11px]" data-i18n="how.detected">⌘V Detected</span>
-</div>
-</div>
-<!-- Step 2 -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-7 shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-5">
-<span class="w-8 h-8 rounded-lg bg-orange-950/40 border border-orange-500/30 text-orange-400 font-mono text-sm flex items-center justify-center font-bold">2</span>
-<span class="font-mono text-xs text-[#94A3B8]" data-i18n="how.stepLabel2">Step 02</span>
-</div>
-<h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="how.step2">Find sensitive data</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="how.step2Body">
-                Tesseract.js runs as WebAssembly in this browser and highlights emails, API keys, customer info, IP addresses, and tokens. The image and the recognized text stay on this device and are not sent to a server.
-              </p>
-</div>
-<!-- Mini UI 2 -->
-<div class="p-3.5 rounded-xl bg-orange-950/20 border border-orange-500/30 flex items-center justify-between">
-<div class="flex items-center gap-2">
-<span translate="no" class="material-symbols-outlined text-[18px] text-orange-400">find_in_page</span>
-<span class="font-mono text-xs text-orange-300" data-i18n="how.tokens">Tokens &amp; Emails</span>
-</div>
-<span class="px-2 py-0.5 rounded bg-orange-600 text-white font-mono text-[11px] font-medium" data-i18n="how.flagged">4 Areas Flagged</span>
-</div>
-</div>
-<!-- Step 3 -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-7 shadow-sm flex flex-col justify-between">
-<div>
-<div class="flex items-center justify-between mb-5">
-<span class="w-8 h-8 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-mono text-sm flex items-center justify-center font-bold">3</span>
-<span class="font-mono text-xs text-[#94A3B8]" data-i18n="how.stepLabel3">Step 03</span>
-</div>
-<h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="how.step3">Hide and share safely</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="how.step3Body">
-                Blackout, pixelate, or replace sensitive areas, then quickly copy or download the safe PNG.
-              </p>
-</div>
-<!-- Mini UI 3 -->
-<div class="p-3.5 rounded-xl bg-[#0F172A] border border-[#1E293B] flex items-center justify-between">
-<div class="flex items-center gap-1.5 bg-[#172033] px-2.5 py-1 rounded-lg border border-[#1E293B]">
-<span class="w-2.5 h-2.5 rounded-sm bg-black border border-slate-700"></span>
-<span class="font-mono text-[11px] text-[#F8FAFC]" data-i18n="label.blackout">Blackout</span>
-</div>
-<button class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg font-mono text-[11px] font-medium flex items-center gap-1 transition-colors">
-<span translate="no" class="material-symbols-outlined text-[14px]">content_copy</span>
-<span data-i18n="how.copyPng">Copy Clean PNG</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 5: BEFORE & AFTER COMPARISON ==================== -->
-<section class="py-16 lg:py-24 border-t border-[#1E293B]">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="max-w-2xl mx-auto text-center mb-12">
-<span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold" data-i18n="before.eyebrow">Optical Verification</span>
-<h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2" data-i18n="before.title">
-            Before &amp; After Redaction
-          </h2>
-<p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="before.subtitle">
-            Clean visual destruction of personal identifiers with permanent pixel removal.
-          </p>
-</div>
-<!-- Side by side comparison container -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-3xl p-6 md:p-8 shadow-xl">
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-<!-- LEFT: Original Unsafe -->
-<div class="flex flex-col gap-4">
-<div class="flex items-center justify-between">
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/60 border border-red-500/30 text-red-300 font-mono text-xs font-semibold">
-<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-<span data-i18n="before.unsafe">Original Screenshot — Unsafe</span>
-</div>
-<span class="text-red-400 font-mono text-xs font-medium" data-i18n="before.leaks">5 High-Risk Leaks</span>
-</div>
-<div class="bg-[#0F172A] border border-[#1E293B] p-6 rounded-2xl space-y-4">
-<!-- Customer Profile Unmasked -->
-<div class="flex items-center gap-3.5 pb-4 bg-[#111827] border border-[#1E293B] p-4 rounded-xl">
-<div class="w-12 h-12 rounded-full overflow-hidden bg-[#1E293B] flex items-center justify-center border border-[#334155]">
-<span translate="no" class="material-symbols-outlined text-[28px] text-[#94A3B8]">account_circle</span>
-</div>
-<div>
-<div class="font-geist text-base font-semibold text-[#F8FAFC]">Marcus Vance</div>
-<div class="font-mono text-xs text-red-400">m.vance@enterprise.io</div>
-</div>
-</div>
-<div class="space-y-3 font-mono text-xs">
-<div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
-<span class="text-[#94A3B8]" data-i18n="before.phone">Phone Number:</span>
-<span class="text-red-400 font-medium">+1 (555) 234-5678</span>
-</div>
-<div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
-<span class="text-[#94A3B8]" data-i18n="before.order">Billing Order ID:</span>
-<span class="text-red-400 font-medium">#ORD-99281-US</span>
-</div>
-<div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
-<span class="text-[#94A3B8]" data-i18n="before.ip">Connection IP:</span>
-<span class="text-red-400 font-medium">192.168.1.104</span>
-</div>
-</div>
-</div>
-</div>
-<!-- RIGHT: Cleaned Safe -->
-<div class="flex flex-col gap-4">
-<div class="flex items-center justify-between">
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-semibold">
-<span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-<span data-i18n="before.safe">Safe to Share — Cleaned</span>
-</div>
-<span class="text-emerald-400 font-mono text-xs font-medium" data-i18n="before.clean">0 Leaks Detected</span>
-</div>
-<div class="bg-[#0F172A] border border-[#1E293B] p-6 rounded-2xl space-y-4">
-<!-- Customer Profile Masked -->
-<div class="flex items-center gap-3.5 pb-4 bg-[#111827] border border-[#1E293B] p-4 rounded-xl">
-<!-- Pixelated avatar -->
-<div class="w-12 h-12 rounded-full overflow-hidden bg-[#05070B] border border-[#334155] flex items-center justify-center text-emerald-400">
-<span translate="no" class="material-symbols-outlined text-[22px]">blur_on</span>
-</div>
-<div class="space-y-1.5 flex-1">
-<div class="h-4 w-28 bg-[#05070B] border border-[#1E293B] rounded"></div>
-<div class="h-3.5 w-40 bg-[#05070B] border border-[#1E293B] rounded"></div>
-</div>
-</div>
-<div class="space-y-3 font-mono text-xs">
-<div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
-<span class="text-[#94A3B8]" data-i18n="before.phone">Phone Number:</span>
-<span class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] rounded text-emerald-300 font-medium">[REDACTED-TEL]</span>
-</div>
-<div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
-<span class="text-[#94A3B8]" data-i18n="before.order">Billing Order ID:</span>
-<div class="h-4 w-28 bg-[#05070B] border border-[#1E293B] rounded"></div>
-</div>
-<div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
-<span class="text-[#94A3B8]" data-i18n="before.ip">Connection IP:</span>
-<span class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] rounded text-emerald-300 font-medium">[IP_MASKED]</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Privacy Reminder Footer -->
-<div class="mt-8 pt-6 border-t border-[#1E293B] flex items-center justify-center gap-2 text-center text-sm text-[#94A3B8]">
-<span translate="no" class="material-symbols-outlined text-emerald-400 text-[18px]">verified</span>
-<span data-i18n="before.note">Sensitive pixels are permanently removed from the exported image and cannot be unmasked.</span>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 6: SENSITIVE DATA DETECTION CATEGORIES ==================== -->
-<section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="max-w-2xl mx-auto text-center mb-14">
-<span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold" data-i18n="detect.eyebrow">Autonomous Inspection</span>
-<h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2" data-i18n="detect.title">
-            Catch sensitive data before someone else does.
-          </h2>
-<p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="detect.subtitle">
-            You stay in control. Redaktix suggests sensitive areas and you choose what to hide.
-          </p>
-</div>
-<!-- 8 Category Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-<!-- 1 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">alternate_email</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.email">Email addresses</h3>
-<span class="font-mono text-[11px] text-emerald-400 font-medium" data-i18n="detect.emailMeta">99.8% precision</span>
-</div>
-</div>
-<!-- 2 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-orange-950/40 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">key</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.api">API keys &amp; tokens</h3>
-<span class="font-mono text-[11px] text-orange-400 font-medium" data-i18n="detect.apiMeta">Stripe, AWS, JWT, GitHub</span>
-</div>
-</div>
-<!-- 3 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">lan</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.ip">IP addresses</h3>
-<span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.ipMeta">IPv4 &amp; IPv6 Subnets</span>
-</div>
-</div>
-<!-- 4 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">call</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.phone">Phone numbers</h3>
-<span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.phoneMeta">Global E.164 formats</span>
-</div>
-</div>
-<!-- 5 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">badge</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.customer">Customer details</h3>
-<span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.customerMeta">Names, TCKN/VKN, credit cards</span>
-</div>
-</div>
-<!-- 6 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-orange-950/40 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">password</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.secrets">Session IDs &amp; tokens</h3>
-<span class="font-mono text-[11px] text-orange-400 font-medium" data-i18n="detect.secretsMeta">Session IDs, high-entropy secrets</span>
-</div>
-</div>
-<!-- 7 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">account_balance</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.iban">IBAN numbers</h3>
-<span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.ibanMeta">Mod-97 checksum</span>
-</div>
-</div>
-<!-- 8 -->
-<div class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
-<div class="w-10 h-10 rounded-xl bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
-<span translate="no" class="material-symbols-outlined text-[20px]">location_on</span>
-</div>
-<div>
-<h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.locations">Locations</h3>
-<span class="font-mono text-[11px] text-emerald-400 font-medium" data-i18n="detect.locationsMeta">Labeled places</span>
-</div>
-</div>
-</div>
-<!-- Live Inspection Drawer UI -->
-<div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 md:p-8 shadow-md">
-<div class="flex items-center justify-between pb-4 border-b border-[#1E293B]">
-<div class="flex items-center gap-3">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">rule</span>
-<span class="font-geist text-lg font-semibold text-[#F8FAFC]">Live Detection Inspection Console</span>
-</div>
-<span class="font-mono text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full font-semibold">Active Inspector</span>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
-<div class="p-3.5 bg-[#111827] border border-[#1E293B] rounded-xl flex items-center justify-between">
-<div class="flex items-center gap-3">
-<input checked="" class="w-4 h-4 rounded text-blue-600 bg-[#0B0F19] border-[#334155] focus:ring-0" type="checkbox"/>
-<span class="font-mono text-xs text-[#F8FAFC]">Stripe Secret Key</span>
-</div>
-<span class="font-mono text-[11px] text-orange-300 bg-orange-950/60 border border-orange-500/30 px-2 py-0.5 rounded font-semibold">99.4% confidence</span>
-</div>
-<div class="p-3.5 bg-[#111827] border border-[#1E293B] rounded-xl flex items-center justify-between">
-<div class="flex items-center gap-3">
-<input checked="" class="w-4 h-4 rounded text-blue-600 bg-[#0B0F19] border-[#334155] focus:ring-0" type="checkbox"/>
-<span class="font-mono text-xs text-[#F8FAFC]">Corporate Email Domain</span>
-</div>
-<span class="font-mono text-[11px] text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded font-semibold">98.1% confidence</span>
-</div>
-<div class="p-3.5 bg-[#111827] border border-[#1E293B] rounded-xl flex items-center justify-between">
-<div class="flex items-center gap-3">
-<input checked="" class="w-4 h-4 rounded text-blue-600 bg-[#0B0F19] border-[#334155] focus:ring-0" type="checkbox"/>
-<span class="font-mono text-xs text-[#F8FAFC]">Internal RFC1918 IP</span>
-</div>
-<span class="font-mono text-[11px] text-blue-300 bg-blue-950/60 border border-blue-500/30 px-2 py-0.5 rounded font-semibold">99.9% confidence</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 7: USE CASES ==================== -->
-<section class="py-16 lg:py-24 border-t border-[#1E293B]" id="use-cases">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="max-w-2xl mx-auto text-center mb-16">
-<span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold" data-i18n="use.eyebrow">Designed for Real Teams</span>
-<h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2" data-i18n="use.title">
-            Who uses Redaktix every day?
-          </h2>
-<p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="use.subtitle">
-            Eliminate compliance bottlenecks across engineering, support, technical writing, and agencies.
-          </p>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-<!-- Developers -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
-<div>
-<div class="w-12 h-12 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center mb-5">
-<span translate="no" class="material-symbols-outlined text-[24px]">terminal</span>
-</div>
-<h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.dev">Developers</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.devBody">
-                Share bugs without exposing API keys, internal URLs, staging auth headers, or user data.
-              </p>
-</div>
-<div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
-<span class="text-orange-400 font-semibold">// Redacted git trace</span>
-<div class="truncate text-[#94A3B8] mt-0.5">AUTH: [REDACTED_JWT]</div>
-</div>
-</div>
-<!-- Customer Support -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
-<div>
-<div class="w-12 h-12 rounded-xl bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-5">
-<span translate="no" class="material-symbols-outlined text-[24px]">support_agent</span>
-</div>
-<h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.support">Customer Support</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.supportBody">
-                Send screenshots to technical teams without leaking customer names, cards, or labeled locations.
-              </p>
-</div>
-<div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
-<span class="text-emerald-400 font-semibold">✓ GDPR Compliant</span>
-<div class="truncate text-[#94A3B8] mt-0.5">Card: •••• •••• •••• 8841</div>
-</div>
-</div>
-<!-- Technical Writers -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
-<div>
-<div class="w-12 h-12 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center mb-5">
-<span translate="no" class="material-symbols-outlined text-[24px]">menu_book</span>
-</div>
-<h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.writers">Technical Writers</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.writersBody">
-                Create clean public documentation using safe, realistic example placeholders that look authentic.
-              </p>
-</div>
-<div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
-<span class="text-blue-400 font-semibold">Docs Mockup:</span>
-<div class="truncate text-[#94A3B8] mt-0.5">admin@acme-demo.test</div>
-</div>
-</div>
-<!-- Agencies -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
-<div>
-<div class="w-12 h-12 rounded-xl bg-orange-950/40 border border-orange-500/30 text-orange-400 flex items-center justify-center mb-5">
-<span translate="no" class="material-symbols-outlined text-[24px]">business_center</span>
-</div>
-<h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.agency">Agencies &amp; Consultants</h3>
-<p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.agencyBody">
-                Share progress without violating client NDAs or exposing competitor brands and revenue numbers.
-              </p>
-</div>
-<div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
-<span class="text-orange-400 font-semibold">NDA Protected</span>
-<div class="truncate text-[#94A3B8] mt-0.5">MRR: [REDACTED_FINANCIAL]</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 8: FEATURE SPOTLIGHT & GRID ==================== -->
-<section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<!-- Wide Spotlight Card: Synthetic Data Replacement -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-3xl p-8 md:p-12 shadow-md mb-16">
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-<div class="lg:col-span-6 flex flex-col gap-4">
-<span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold" data-i18n="spot.eyebrow">Spotlight Capability</span>
-<h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold tracking-tight" data-i18n="spot.title">
-                Hide sensitive data before you publish
+              <!-- CTAs -->
+              <div class="flex flex-wrap items-center gap-4 pt-2 w-full sm:w-auto">
+                <a class="inline-flex items-center justify-center gap-3 px-6 h-12 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-200"
+                  href="/editor.html">
+                  <span translate="no" class="material-symbols-outlined text-[20px]">content_paste</span>
+                  <span data-i18n="hero.paste">Paste or upload a screenshot</span>
+                  <kbd translate="no"
+                    class="hidden sm:inline-block px-2 py-0.5 text-xs font-mono bg-blue-700/60 text-blue-100 rounded border border-blue-400/30">⌘V
+                    / Ctrl+V</kbd>
+                </a>
+                <a class="inline-flex items-center justify-center gap-2 px-5 h-12 bg-[#172033] hover:bg-[#1E293B] text-[#F8FAFC] border border-[#1E293B] rounded-xl font-medium transition-colors shadow-sm"
+                  href="#how-it-works">
+                  <span translate="no" class="material-symbols-outlined text-blue-400 text-[20px]">play_circle</span>
+                  <span data-i18n="hero.seeHow">See how it works</span>
+                </a>
+              </div>
+              <!-- Micro-trust copy -->
+              <div class="flex flex-wrap items-center gap-5 text-sm text-[#94A3B8] pt-1">
+                <span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
+                  <span translate="no" class="material-symbols-outlined text-[18px]">check_circle</span>
+                  <span data-i18n="hero.noAccount">No account required</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-emerald-400 font-medium">
+                  <span translate="no" class="material-symbols-outlined text-[18px]">verified_user</span>
+                  <span data-i18n="hero.neverLeaves">Images never leave your device</span>
+                </span>
+              </div>
+            </div>
+            <!-- Hero Right Column: Interactive Mockup Window -->
+            <div class="lg:col-span-6 relative">
+              <div
+                class="relative rounded-2xl bg-[#111827] border border-[#1E293B] shadow-2xl shadow-black/60 overflow-hidden">
+                <!-- Window Titlebar -->
+                <div class="bg-[#0F172A] border-b border-[#1E293B] px-4 py-3 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-[#EF4444]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#10B981]"></div>
+                  </div>
+                  <div
+                    class="flex items-center gap-1.5 text-xs font-mono text-[#94A3B8] bg-[#172033] px-3 py-1 rounded-md border border-[#1E293B]">
+                    <span translate="no" class="material-symbols-outlined text-[14px] text-blue-400">image</span>
+                    <span>screenshot_2025_05_auth_flow.png</span>
+                  </div>
+                  <div class="flex items-center gap-2 text-[#64748B]">
+                    <span translate="no"
+                      class="material-symbols-outlined text-[18px] hover:text-[#94A3B8] cursor-pointer">crop</span>
+                    <span translate="no"
+                      class="material-symbols-outlined text-[18px] hover:text-[#94A3B8] cursor-pointer">zoom_in</span>
+                  </div>
+                </div>
+                <!-- Redaction Sandbox Canvas -->
+                <div class="p-5 md:p-6 bg-[#111827] relative min-h-[380px] flex flex-col justify-between select-none">
+                  <!-- Floating Top-Right Detection Banner -->
+                  <div
+                    class="absolute top-4 right-4 z-20 flex items-center gap-2.5 bg-[#172033]/95 border border-[#1E293B] backdrop-blur-md px-3.5 py-2 rounded-xl shadow-lg">
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></span>
+                      <span class="font-mono text-xs font-semibold text-[#F8FAFC]" data-i18n="mock.found">3 sensitive
+                        items found</span>
+                    </div>
+                    <span
+                      class="text-emerald-300 font-mono text-[11px] bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 rounded-full font-medium"
+                      data-i18n="mock.processed">Processed locally</span>
+                    <a class="bg-blue-600 text-white text-xs font-mono font-medium px-2.5 py-1 rounded-lg hover:bg-blue-500 transition-colors"
+                      href="/editor.html" data-i18n="editor.hideAll">
+                      Hide all
+                    </a>
+                  </div>
+                  <!-- Ticket Internal UI Mockup -->
+                  <div class="space-y-4 pt-10">
+                    <!-- Header inside ticket -->
+                    <div
+                      class="flex items-center justify-between pb-3 bg-[#0F172A] border border-[#1E293B] p-3.5 rounded-xl">
+                      <div class="flex items-center gap-3">
+                        <!-- Profile avatar with Pixelation Effect -->
+                        <div
+                          class="relative w-11 h-11 rounded-lg overflow-hidden border border-[#1E293B] bg-[#1E293B] flex items-center justify-center">
+                          <div class="absolute inset-0 grid grid-cols-4 grid-rows-4 opacity-75">
+                            <div class="bg-slate-700"></div>
+                            <div class="bg-blue-600/60"></div>
+                            <div class="bg-slate-800"></div>
+                            <div class="bg-slate-600"></div>
+                            <div class="bg-blue-500/50"></div>
+                            <div class="bg-slate-900"></div>
+                            <div class="bg-blue-600"></div>
+                            <div class="bg-slate-700"></div>
+                            <div class="bg-slate-800"></div>
+                            <div class="bg-blue-400/40"></div>
+                            <div class="bg-slate-600"></div>
+                            <div class="bg-slate-800"></div>
+                            <div class="bg-slate-700"></div>
+                            <div class="bg-slate-900"></div>
+                            <div class="bg-blue-700"></div>
+                            <div class="bg-slate-700"></div>
+                          </div>
+                          <span translate="no"
+                            class="material-symbols-outlined text-[15px] text-blue-300 z-10">blur_on</span>
+                        </div>
+                        <div>
+                          <div class="font-geist text-sm font-semibold text-[#F8FAFC]" data-i18n="mock.ticket">Support
+                            Ticket #TK-8492</div>
+                          <div class="font-mono text-xs text-[#94A3B8]" data-i18n="mock.opened">Opened by User ID
+                            #USR-9921</div>
+                        </div>
+                      </div>
+                      <span
+                        class="px-2.5 py-1 bg-red-950/50 border border-red-500/30 rounded-full font-mono text-[11px] text-red-300 font-medium"
+                        data-i18n="mock.priority">Priority High</span>
+                    </div>
+                    <!-- Customer Details Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <!-- Email Detection Field with Amber Box -->
+                      <div class="relative p-3 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col gap-1">
+                        <span class="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8]"
+                          data-i18n="mock.customerEmail">Customer Email</span>
+                        <div class="relative mt-1">
+                          <span class="font-mono text-xs text-[#F8FAFC] font-medium">sarah.connor@acmecorp.com</span>
+                          <!-- Amber Detection Frame -->
+                          <div
+                            class="absolute -inset-1.5 rounded-md bg-orange-500/10 ring-2 ring-orange-500 flex items-center justify-end px-1.5 pointer-events-none">
+                            <span
+                              class="font-mono text-[10px] bg-orange-600 text-white font-semibold px-1.5 py-0.5 rounded shadow-xs">
+                              Email Detected (99%)
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- API Token with crisp Solid Blackout Redaction -->
+                      <div class="relative p-3 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col gap-1">
+                        <span class="text-[11px] font-mono uppercase tracking-wider text-[#94A3B8]"
+                          data-i18n="mock.apiKey">Connected Stripe API Key</span>
+                        <div class="relative mt-1">
+                          <span class="font-mono text-xs text-transparent select-none">sk_live_948194819482910</span>
+                          <!-- Solid Blackout Overlay -->
+                          <div
+                            class="absolute inset-0 bg-[#05070B] border border-[#1E293B] rounded-md flex items-center justify-between px-2.5 shadow-inner">
+                            <div class="flex items-center gap-1.5">
+                              <span translate="no"
+                                class="material-symbols-outlined text-[13px] text-emerald-400">lock</span>
+                              <span
+                                class="font-mono text-[10px] tracking-wider text-[#94A3B8]">BLACKOUT_REDACTION</span>
+                            </div>
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- IP Address Log snippet -->
+                    <div
+                      class="p-3 rounded-xl bg-[#0F172A]/70 border border-[#1E293B] flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <span translate="no"
+                          class="material-symbols-outlined text-[16px] text-[#64748B]">terminal</span>
+                        <span class="font-mono text-xs text-[#94A3B8]">Origin Client IP:</span>
+                        <span
+                          class="font-mono text-xs text-[#F8FAFC] bg-[#1E293B] px-2 py-0.5 rounded">192.168.1.104</span>
+                      </div>
+                      <a class="text-blue-400 hover:text-blue-300 font-mono text-xs font-medium inline-flex items-center gap-1 transition-colors"
+                        href="/editor.html">
+                        <span translate="no" class="material-symbols-outlined text-[14px]">shield</span> <span
+                          data-i18n="mock.redact">Redact</span>
+                      </a>
+                    </div>
+                  </div>
+                  <!-- Quick action bar bottom inside mockup -->
+                  <div
+                    class="mt-4 pt-3 flex items-center justify-between text-xs text-[#94A3B8] bg-[#0F172A] border border-[#1E293B] px-3.5 py-2.5 rounded-xl">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                      <span class="font-mono text-[11px]" data-i18n="mock.engine">WebAssembly Engine: Active</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-mono text-[11px] text-blue-400 font-medium" data-i18n="mock.ready">Ready to
+                        Export</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 2: INTERACTIVE UPLOAD AREA ==================== -->
+      <section class="pb-16 lg:pb-20">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div
+            class="relative rounded-3xl bg-[#111827] border-2 border-dashed border-[#2A374A] hover:border-blue-500/60 p-8 md:p-14 shadow-xl transition-all duration-300 text-center flex flex-col items-center justify-center cursor-pointer group">
+            <!-- Floating Subtle Gradient Backdrop Accent -->
+            <div
+              class="absolute inset-0 bg-gradient-to-b from-blue-600/5 via-transparent to-transparent rounded-3xl pointer-events-none">
+            </div>
+            <div class="relative z-10 flex flex-col items-center max-w-xl">
+              <!-- Blue Icon Container -->
+              <div
+                class="w-16 h-16 rounded-2xl bg-[#172033] border border-[#1E293B] flex items-center justify-center mb-6 group-hover:scale-105 group-hover:border-blue-500/40 transition-transform duration-200">
+                <span translate="no" class="material-symbols-outlined text-[34px] text-blue-400">cloud_upload</span>
+              </div>
+              <!-- Main Title & Instructions -->
+              <h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold tracking-tight"
+                data-i18n="drop.title">
+                Drop a screenshot here
               </h2>
-<p class="text-base text-[#94A3B8] leading-relaxed" data-i18n="spot.body">
-                Black out suggested names, labeled locations, and API keys before you share product tutorials and demos.
+              <p class="text-base text-[#94A3B8] mt-2 mb-6" data-i18n="drop.subtitle">
+                or paste directly from your clipboard anywhere on this page
               </p>
-</div>
-<div class="lg:col-span-6 bg-[#0F172A] border border-[#1E293B] p-6 rounded-2xl space-y-4">
-<div class="bg-[#111827] border border-[#1E293B] p-4 rounded-xl flex items-center justify-between shadow-xs">
-<span class="font-mono text-xs sm:text-sm text-red-400 line-through">john@company.com</span>
-<span translate="no" class="material-symbols-outlined text-[18px] text-blue-400">arrow_forward</span>
-<span class="font-mono text-xs sm:text-sm text-emerald-400 font-medium">user@example.com</span>
-</div>
-<div class="bg-[#111827] border border-[#1E293B] p-4 rounded-xl flex items-center justify-between shadow-xs">
-<span class="font-mono text-xs sm:text-sm text-red-400 line-through">sk_live_94f920da82...</span>
-<span translate="no" class="material-symbols-outlined text-[18px] text-blue-400">arrow_forward</span>
-<span class="font-mono text-xs sm:text-sm text-emerald-400 font-medium">sk_test_••••••••••••</span>
-</div>
-<div class="bg-[#111827] border border-[#1E293B] p-4 rounded-xl flex items-center justify-between shadow-xs">
-<span class="font-mono text-xs sm:text-sm text-red-400 line-through">4111 8291 0029 4821</span>
-<span translate="no" class="material-symbols-outlined text-[18px] text-blue-400">arrow_forward</span>
-<span class="font-mono text-xs sm:text-sm text-emerald-400 font-medium">4000 1234 5678 9010</span>
-</div>
-</div>
-</div>
-</div>
-<!-- 12-Feature Grid -->
-<div class="text-center max-w-xl mx-auto mb-12">
-<h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold" data-i18n="suite.title">Comprehensive Privacy Suite</h2>
-<p class="text-base text-[#94A3B8] mt-2" data-i18n="suite.subtitle">Engineered specifically for screenshot triage speed and uncompromised safety.</p>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-<!-- 1 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">content_paste</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.paste">Paste from clipboard</span>
-</div>
-<!-- 2 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">format_paint</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.blackout">Manual blackout</span>
-</div>
-<!-- 3 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">grid_on</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.pixel">Pixelation</span>
-</div>
-<!-- 4 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">blur_on</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.blur">Blur for anonymity</span>
-</div>
-<!-- 5 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">auto_fix_high</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.auto">Automatic detection</span>
-</div>
-<!-- 6 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">find_replace</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.replace">Safe data replacement</span>
-</div>
-<!-- 7 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">undo</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.undo">Undo and redo</span>
-</div>
-<!-- 8 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">content_copy</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.copy">Copy cleaned image</span>
-</div>
-<!-- 9 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">download</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.download">Download as PNG</span>
-</div>
-<!-- 10 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">shield</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.local">Local-only processing</span>
-</div>
-<!-- 11 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">offline_pin</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.offline">Offline-ready</span>
-</div>
-<!-- 12 -->
-<div class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
-<span translate="no" class="material-symbols-outlined text-orange-400 text-[22px]">extension</span>
-<span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.extension">Extension (Coming soon)</span>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 10: SECURITY SECTION ==================== -->
-<section class="py-16 lg:py-24 border-t border-[#1E293B]" id="security">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="bg-gradient-to-b from-[#061e18]/80 to-[#0B0F19] border border-emerald-900/40 rounded-3xl p-8 md:p-14 shadow-sm">
-<div class="max-w-2xl mx-auto text-center mb-12">
-<div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-semibold mb-4">
-<span translate="no" class="material-symbols-outlined text-[16px] text-emerald-400">lock</span>
-<span data-i18n="security.badge">Zero Cloud Uplink Architecture</span>
-</div>
-<h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight" data-i18n="security.title">
-              Your screenshot is private by design.
+              <!-- Buttons & Shortcuts -->
+              <div class="flex flex-wrap items-center justify-center gap-3 mb-6">
+                <a class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium shadow-md shadow-blue-600/20 transition-all flex items-center gap-2"
+                  href="/editor.html">
+                  <span translate="no" class="material-symbols-outlined text-[18px]">add_photo_alternate</span>
+                  <span data-i18n="drop.choose">Choose an image</span>
+                </a>
+                <div
+                  class="px-4 py-2.5 bg-[#172033] border border-[#1E293B] text-[#F8FAFC] rounded-xl font-mono text-xs flex items-center gap-2">
+                  <span translate="no" class="material-symbols-outlined text-[16px] text-[#94A3B8]">keyboard</span>
+                  <span>Ctrl + V / ⌘V</span>
+                </div>
+                <div
+                  class="px-3.5 py-2.5 bg-[#172033] border border-[#1E293B] text-[#94A3B8] rounded-xl font-mono text-xs">
+                  PNG, JPG, WebP
+                </div>
+              </div>
+              <!-- Privacy Guarantee Banner -->
+              <div
+                class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-medium">
+                <span translate="no" class="material-symbols-outlined text-[16px] text-emerald-400">lock</span>
+                <span data-i18n="drop.stays">Your image stays on this device • zero bytes sent to servers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 3: PRIVACY TRUST STRIP ==================== -->
+      <section class="pb-16 lg:pb-24">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <!-- Centered callout headline -->
+          <div class="text-center mb-10">
+            <h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold tracking-tight"
+              data-i18n="trust.title">
+              Your screenshots never leave your device.
             </h2>
-<p class="text-base sm:text-lg text-[#94A3B8] mt-2" data-i18n="security.subtitle">
-              No server ingestion pipelines. No background telemetry scraping images.
+            <p class="text-base text-[#94A3B8] mt-2" data-i18n="trust.subtitle">
+              Cryptographically sandboxed client-side architecture verified by design.
             </p>
-</div>
-<!-- Architecture Flow Diagram -->
-<div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-8 shadow-md max-w-4xl mx-auto mb-8">
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-center">
-<!-- Step A -->
-<div class="p-6 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col items-center gap-3">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[32px]">devices</span>
-<div class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="security.device">User Device</div>
-<p class="text-xs text-[#94A3B8]" data-i18n="security.deviceBody">Browser sandbox hosts image payload strictly in memory.</p>
-</div>
-<!-- Arrow 1 -->
-<div class="hidden md:flex flex-col items-center justify-center text-emerald-400">
-<span translate="no" class="material-symbols-outlined text-[30px]">arrow_right_alt</span>
-<span class="font-mono text-[11px] font-semibold mt-1" data-i18n="security.hops">Zero Network Hops</span>
-</div>
-<!-- Step B -->
-<div class="p-6 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col items-center gap-3">
-<span translate="no" class="material-symbols-outlined text-emerald-400 text-[32px]">memory</span>
-<div class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="security.wasm">Local Wasm Engine</div>
-<p class="text-xs text-[#94A3B8]" data-i18n="security.wasmBody">Tesseract.js WebAssembly runs OCR on the local CPU. The screenshot and recognized text never leave the tab.</p>
-</div>
-<!-- Arrow 2 -->
-<div class="hidden md:flex flex-col items-center justify-center text-emerald-400">
-<span translate="no" class="material-symbols-outlined text-[30px]">arrow_right_alt</span>
-<span class="font-mono text-[11px] font-semibold mt-1" data-i18n="security.scrub">Permanent Scrub</span>
-</div>
-<!-- Step C -->
-<div class="p-6 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col items-center gap-3 md:col-start-auto">
-<span translate="no" class="material-symbols-outlined text-blue-400 text-[32px]">verified</span>
-<div class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="security.output">Safe Redacted Output</div>
-<p class="text-xs text-[#94A3B8]" data-i18n="security.outputBody">Exported PNG with sanitized irreversible pixels.</p>
-</div>
-</div>
-</div>
-<!-- Callout Banner -->
-<div class="text-center">
-<p class="font-geist text-base sm:text-lg text-[#F8FAFC] font-semibold" data-i18n="security.offline">
-              Disconnect from the internet after loading the app and it still works.
+          </div>
+          <!-- 4-Column Card Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Item 1 -->
+            <div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
+              <div
+                class="w-11 h-11 rounded-xl bg-[#172033] border border-[#1E293B] flex items-center justify-center text-blue-400">
+                <span translate="no" class="material-symbols-outlined text-[22px]">cloud_off</span>
+              </div>
+              <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.noUploads">No File Uploads
+              </h3>
+              <p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.noUploadsBody">
+                Zero cloud ingestion or network requests. Raw pixels remain strictly in device RAM.
+              </p>
+            </div>
+            <!-- Item 2 -->
+            <div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
+              <div
+                class="w-11 h-11 rounded-xl bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <span translate="no" class="material-symbols-outlined text-[22px]">memory</span>
+              </div>
+              <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.local">Local Browser
+                Processing</h3>
+              <p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.localBody">
+                Compiled WebAssembly &amp; Web Workers run OCR and inference directly on your local CPU.
+              </p>
+            </div>
+            <!-- Item 3 -->
+            <div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
+              <div
+                class="w-11 h-11 rounded-xl bg-[#172033] border border-[#1E293B] flex items-center justify-center text-blue-400">
+                <span translate="no" class="material-symbols-outlined text-[22px]">auto_delete</span>
+              </div>
+              <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.noStorage">No Image Storage
+              </h3>
+              <p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.noStorageBody">
+                Never cached, stored, or indexed anywhere. Closing your tab immediately clears all state.
+              </p>
+            </div>
+            <!-- Item 4 -->
+            <div class="bg-[#111827] border border-[#1E293B] p-6 rounded-2xl shadow-sm flex flex-col gap-3">
+              <div
+                class="w-11 h-11 rounded-xl bg-emerald-950/50 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <span translate="no" class="material-symbols-outlined text-[22px]">wifi_off</span>
+              </div>
+              <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="trust.offline">Works Offline</h3>
+              <p class="text-sm text-[#94A3B8] leading-relaxed" data-i18n="trust.offlineBody">
+                Disconnect Wi-Fi or go into airplane mode. Every feature continues to run with zero lag.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 4: HOW IT WORKS ==================== -->
+      <section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]" id="how-it-works">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div class="max-w-2xl mx-auto text-center mb-16">
+            <span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold"
+              data-i18n="how.eyebrow">Workflow</span>
+            <h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2"
+              data-i18n="how.title">
+              Three effortless steps to zero data leaks
+            </h2>
+            <p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="how.subtitle">
+              Redact sensitive screens in seconds before posting into Slack, Jira, GitHub, or documentation.
             </p>
-<p class="text-sm text-[#94A3B8] mt-1" data-i18n="security.test">
-              Test it yourself: Turn on Airplane Mode, paste your confidential screen, and redact without a hiccup.
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            <!-- Step 1 -->
+            <div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-7 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-5">
+                  <span
+                    class="w-8 h-8 rounded-lg bg-[#172033] border border-blue-500/30 text-blue-400 font-mono text-sm flex items-center justify-center font-bold">1</span>
+                  <span class="font-mono text-xs text-[#94A3B8]" data-i18n="how.stepLabel1">Step 01</span>
+                </div>
+                <h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="how.step1">Paste your
+                  screenshot</h3>
+                <p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="how.step1Body">
+                  Upload, drag and drop, or paste directly from your clipboard without navigating file trees.
+                </p>
+              </div>
+              <!-- Mini UI 1 -->
+              <div class="p-3.5 rounded-xl bg-[#0F172A] border border-[#1E293B] flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span translate="no"
+                    class="material-symbols-outlined text-[18px] text-blue-400">content_paste_go</span>
+                  <span class="font-mono text-xs text-[#F8FAFC]" data-i18n="how.clipboard">Clipboard Active</span>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-blue-600 text-white font-mono text-[11px]"
+                  data-i18n="how.detected">⌘V Detected</span>
+              </div>
+            </div>
+            <!-- Step 2 -->
+            <div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-7 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-5">
+                  <span
+                    class="w-8 h-8 rounded-lg bg-orange-950/40 border border-orange-500/30 text-orange-400 font-mono text-sm flex items-center justify-center font-bold">2</span>
+                  <span class="font-mono text-xs text-[#94A3B8]" data-i18n="how.stepLabel2">Step 02</span>
+                </div>
+                <h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="how.step2">Find sensitive
+                  data</h3>
+                <p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="how.step2Body">
+                  Tesseract.js runs as WebAssembly in this browser and highlights emails, API keys, customer info, IP
+                  addresses, and tokens. The image and the recognized text stay on this device and are not sent to a
+                  server.
+                </p>
+              </div>
+              <!-- Mini UI 2 -->
+              <div
+                class="p-3.5 rounded-xl bg-orange-950/20 border border-orange-500/30 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span translate="no" class="material-symbols-outlined text-[18px] text-orange-400">find_in_page</span>
+                  <span class="font-mono text-xs text-orange-300" data-i18n="how.tokens">Tokens &amp; Emails</span>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-orange-600 text-white font-mono text-[11px] font-medium"
+                  data-i18n="how.flagged">4 Areas Flagged</span>
+              </div>
+            </div>
+            <!-- Step 3 -->
+            <div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-7 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between mb-5">
+                  <span
+                    class="w-8 h-8 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-mono text-sm flex items-center justify-center font-bold">3</span>
+                  <span class="font-mono text-xs text-[#94A3B8]" data-i18n="how.stepLabel3">Step 03</span>
+                </div>
+                <h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="how.step3">Hide and share
+                  safely</h3>
+                <p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="how.step3Body">
+                  Blackout, pixelate, or replace sensitive areas, then quickly copy or download the safe PNG.
+                </p>
+              </div>
+              <!-- Mini UI 3 -->
+              <div class="p-3.5 rounded-xl bg-[#0F172A] border border-[#1E293B] flex items-center justify-between">
+                <div class="flex items-center gap-1.5 bg-[#172033] px-2.5 py-1 rounded-lg border border-[#1E293B]">
+                  <span class="w-2.5 h-2.5 rounded-sm bg-black border border-slate-700"></span>
+                  <span class="font-mono text-[11px] text-[#F8FAFC]" data-i18n="label.blackout">Blackout</span>
+                </div>
+                <button
+                  class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg font-mono text-[11px] font-medium flex items-center gap-1 transition-colors">
+                  <span translate="no" class="material-symbols-outlined text-[14px]">content_copy</span>
+                  <span data-i18n="how.copyPng">Copy Clean PNG</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 5: BEFORE & AFTER COMPARISON ==================== -->
+      <section class="py-16 lg:py-24 border-t border-[#1E293B]">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div class="max-w-2xl mx-auto text-center mb-12">
+            <span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold"
+              data-i18n="before.eyebrow">Optical Verification</span>
+            <h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2"
+              data-i18n="before.title">
+              Before &amp; After Redaction
+            </h2>
+            <p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="before.subtitle">
+              Clean visual destruction of personal identifiers with permanent pixel removal.
             </p>
-</div>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 11: FAQ SECTION ==================== -->
-<section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="max-w-2xl mx-auto text-center mb-16">
-<span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold" data-i18n="faq.eyebrow">Questions &amp; Answers</span>
-<h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2" data-i18n="faq.title">
-            Frequently Asked Questions
-          </h2>
-<p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="faq.subtitle">
-            Everything you need to know about our cryptographic browser-first approach.
+          </div>
+          <!-- Side by side comparison container -->
+          <div class="bg-[#111827] border border-[#1E293B] rounded-3xl p-6 md:p-8 shadow-xl">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <!-- LEFT: Original Unsafe -->
+              <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                  <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/60 border border-red-500/30 text-red-300 font-mono text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                    <span data-i18n="before.unsafe">Original Screenshot — Unsafe</span>
+                  </div>
+                  <span class="text-red-400 font-mono text-xs font-medium" data-i18n="before.leaks">5 High-Risk
+                    Leaks</span>
+                </div>
+                <div class="bg-[#0F172A] border border-[#1E293B] p-6 rounded-2xl space-y-4">
+                  <!-- Customer Profile Unmasked -->
+                  <div class="flex items-center gap-3.5 pb-4 bg-[#111827] border border-[#1E293B] p-4 rounded-xl">
+                    <div
+                      class="w-12 h-12 rounded-full overflow-hidden bg-[#1E293B] flex items-center justify-center border border-[#334155]">
+                      <span translate="no"
+                        class="material-symbols-outlined text-[28px] text-[#94A3B8]">account_circle</span>
+                    </div>
+                    <div>
+                      <div class="font-geist text-base font-semibold text-[#F8FAFC]">Marcus Vance</div>
+                      <div class="font-mono text-xs text-red-400">m.vance@enterprise.io</div>
+                    </div>
+                  </div>
+                  <div class="space-y-3 font-mono text-xs">
+                    <div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
+                      <span class="text-[#94A3B8]" data-i18n="before.phone">Phone Number:</span>
+                      <span class="text-red-400 font-medium">+1 (555) 234-5678</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
+                      <span class="text-[#94A3B8]" data-i18n="before.order">Billing Order ID:</span>
+                      <span class="text-red-400 font-medium">#ORD-99281-US</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
+                      <span class="text-[#94A3B8]" data-i18n="before.ip">Connection IP:</span>
+                      <span class="text-red-400 font-medium">192.168.1.104</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- RIGHT: Cleaned Safe -->
+              <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                  <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-mono text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span data-i18n="before.safe">Safe to Share — Cleaned</span>
+                  </div>
+                  <span class="text-emerald-400 font-mono text-xs font-medium" data-i18n="before.clean">0 Leaks
+                    Detected</span>
+                </div>
+                <div class="bg-[#0F172A] border border-[#1E293B] p-6 rounded-2xl space-y-4">
+                  <!-- Customer Profile Masked -->
+                  <div class="flex items-center gap-3.5 pb-4 bg-[#111827] border border-[#1E293B] p-4 rounded-xl">
+                    <!-- Pixelated avatar -->
+                    <div
+                      class="w-12 h-12 rounded-full overflow-hidden bg-[#05070B] border border-[#334155] flex items-center justify-center text-emerald-400">
+                      <span translate="no" class="material-symbols-outlined text-[22px]">blur_on</span>
+                    </div>
+                    <div class="space-y-1.5 flex-1">
+                      <div class="h-4 w-28 bg-[#05070B] border border-[#1E293B] rounded"></div>
+                      <div class="h-3.5 w-40 bg-[#05070B] border border-[#1E293B] rounded"></div>
+                    </div>
+                  </div>
+                  <div class="space-y-3 font-mono text-xs">
+                    <div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
+                      <span class="text-[#94A3B8]" data-i18n="before.phone">Phone Number:</span>
+                      <span
+                        class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] rounded text-emerald-300 font-medium">[REDACTED-TEL]</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
+                      <span class="text-[#94A3B8]" data-i18n="before.order">Billing Order ID:</span>
+                      <div class="h-4 w-28 bg-[#05070B] border border-[#1E293B] rounded"></div>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-[#111827] border border-[#1E293B] rounded-xl">
+                      <span class="text-[#94A3B8]" data-i18n="before.ip">Connection IP:</span>
+                      <span
+                        class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] rounded text-emerald-300 font-medium">[IP_MASKED]</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Privacy Reminder Footer -->
+            <div
+              class="mt-8 pt-6 border-t border-[#1E293B] flex items-center justify-center gap-2 text-center text-sm text-[#94A3B8]">
+              <span translate="no" class="material-symbols-outlined text-emerald-400 text-[18px]">verified</span>
+              <span data-i18n="before.note">Sensitive pixels are permanently removed from the exported image and cannot
+                be unmasked.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 6: SENSITIVE DATA DETECTION CATEGORIES ==================== -->
+      <section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div class="max-w-2xl mx-auto text-center mb-14">
+            <span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold"
+              data-i18n="detect.eyebrow">Autonomous Inspection</span>
+            <h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2"
+              data-i18n="detect.title">
+              Catch sensitive data before someone else does.
+            </h2>
+            <p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="detect.subtitle">
+              You stay in control. Redaktix suggests sensitive areas and you choose what to hide.
+            </p>
+          </div>
+          <!-- 8 Category Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+            <!-- 1 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">alternate_email</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.email">Email addresses
+                </h3>
+                <span class="font-mono text-[11px] text-emerald-400 font-medium" data-i18n="detect.emailMeta">99.8%
+                  precision</span>
+              </div>
+            </div>
+            <!-- 2 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-orange-950/40 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">key</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.api">API keys &amp;
+                  tokens</h3>
+                <span class="font-mono text-[11px] text-orange-400 font-medium" data-i18n="detect.apiMeta">Stripe, AWS,
+                  JWT, GitHub</span>
+              </div>
+            </div>
+            <!-- 3 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">lan</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.ip">IP addresses</h3>
+                <span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.ipMeta">IPv4 &amp; IPv6
+                  Subnets</span>
+              </div>
+            </div>
+            <!-- 4 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">call</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.phone">Phone numbers
+                </h3>
+                <span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.phoneMeta">Global E.164
+                  formats</span>
+              </div>
+            </div>
+            <!-- 5 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">badge</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.customer">Customer
+                  details</h3>
+                <span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.customerMeta">Names,
+                  TCKN/VKN, credit cards</span>
+              </div>
+            </div>
+            <!-- 6 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-orange-950/40 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">password</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.secrets">Session IDs
+                  &amp; tokens</h3>
+                <span class="font-mono text-[11px] text-orange-400 font-medium" data-i18n="detect.secretsMeta">Session
+                  IDs, high-entropy secrets</span>
+              </div>
+            </div>
+            <!-- 7 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">account_balance</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.iban">IBAN numbers</h3>
+                <span class="font-mono text-[11px] text-[#94A3B8] font-medium" data-i18n="detect.ibanMeta">Mod-97
+                  checksum</span>
+              </div>
+            </div>
+            <!-- 8 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] p-5 rounded-2xl shadow-sm flex items-start gap-4 hover:border-[#334155] transition-colors">
+              <div
+                class="w-10 h-10 rounded-xl bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+                <span translate="no" class="material-symbols-outlined text-[20px]">location_on</span>
+              </div>
+              <div>
+                <h3 class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="detect.locations">Locations
+                </h3>
+                <span class="font-mono text-[11px] text-emerald-400 font-medium"
+                  data-i18n="detect.locationsMeta">Labeled places</span>
+              </div>
+            </div>
+          </div>
+          <!-- Live Inspection Drawer UI -->
+          <div class="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 md:p-8 shadow-md">
+            <div class="flex items-center justify-between pb-4 border-b border-[#1E293B]">
+              <div class="flex items-center gap-3">
+                <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">rule</span>
+                <span class="font-geist text-lg font-semibold text-[#F8FAFC]">Live Detection Inspection Console</span>
+              </div>
+              <span
+                class="font-mono text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full font-semibold">Active
+                Inspector</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
+              <div class="p-3.5 bg-[#111827] border border-[#1E293B] rounded-xl flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input checked="" class="w-4 h-4 rounded text-blue-600 bg-[#0B0F19] border-[#334155] focus:ring-0"
+                    type="checkbox" />
+                  <span class="font-mono text-xs text-[#F8FAFC]">Stripe Secret Key</span>
+                </div>
+                <span
+                  class="font-mono text-[11px] text-orange-300 bg-orange-950/60 border border-orange-500/30 px-2 py-0.5 rounded font-semibold">99.4%
+                  confidence</span>
+              </div>
+              <div class="p-3.5 bg-[#111827] border border-[#1E293B] rounded-xl flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input checked="" class="w-4 h-4 rounded text-blue-600 bg-[#0B0F19] border-[#334155] focus:ring-0"
+                    type="checkbox" />
+                  <span class="font-mono text-xs text-[#F8FAFC]">Corporate Email Domain</span>
+                </div>
+                <span
+                  class="font-mono text-[11px] text-emerald-300 bg-emerald-950/60 border border-emerald-500/30 px-2 py-0.5 rounded font-semibold">98.1%
+                  confidence</span>
+              </div>
+              <div class="p-3.5 bg-[#111827] border border-[#1E293B] rounded-xl flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <input checked="" class="w-4 h-4 rounded text-blue-600 bg-[#0B0F19] border-[#334155] focus:ring-0"
+                    type="checkbox" />
+                  <span class="font-mono text-xs text-[#F8FAFC]">Internal RFC1918 IP</span>
+                </div>
+                <span
+                  class="font-mono text-[11px] text-blue-300 bg-blue-950/60 border border-blue-500/30 px-2 py-0.5 rounded font-semibold">99.9%
+                  confidence</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 7: USE CASES ==================== -->
+      <section class="py-16 lg:py-24 border-t border-[#1E293B]" id="use-cases">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div class="max-w-2xl mx-auto text-center mb-16">
+            <span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold"
+              data-i18n="use.eyebrow">Designed for Real Teams</span>
+            <h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2"
+              data-i18n="use.title">
+              Who uses Redaktix every day?
+            </h2>
+            <p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="use.subtitle">
+              Eliminate compliance bottlenecks across engineering, support, technical writing, and agencies.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Developers -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
+              <div>
+                <div
+                  class="w-12 h-12 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center mb-5">
+                  <span translate="no" class="material-symbols-outlined text-[24px]">terminal</span>
+                </div>
+                <h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.dev">Developers</h3>
+                <p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.devBody">
+                  Share bugs without exposing API keys, internal URLs, staging auth headers, or user data.
+                </p>
+              </div>
+              <div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
+                <span class="text-orange-400 font-semibold">// Redacted git trace</span>
+                <div class="truncate text-[#94A3B8] mt-0.5">AUTH: [REDACTED_JWT]</div>
+              </div>
+            </div>
+            <!-- Customer Support -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
+              <div>
+                <div
+                  class="w-12 h-12 rounded-xl bg-emerald-950/50 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-5">
+                  <span translate="no" class="material-symbols-outlined text-[24px]">support_agent</span>
+                </div>
+                <h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.support">Customer
+                  Support</h3>
+                <p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.supportBody">
+                  Send screenshots to technical teams without leaking customer names, cards, or labeled locations.
+                </p>
+              </div>
+              <div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
+                <span class="text-emerald-400 font-semibold">✓ GDPR Compliant</span>
+                <div class="truncate text-[#94A3B8] mt-0.5">Card: •••• •••• •••• 8841</div>
+              </div>
+            </div>
+            <!-- Technical Writers -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
+              <div>
+                <div
+                  class="w-12 h-12 rounded-xl bg-[#172033] border border-[#1E293B] text-blue-400 flex items-center justify-center mb-5">
+                  <span translate="no" class="material-symbols-outlined text-[24px]">menu_book</span>
+                </div>
+                <h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.writers">Technical
+                  Writers</h3>
+                <p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.writersBody">
+                  Create clean public documentation using safe, realistic example placeholders that look authentic.
+                </p>
+              </div>
+              <div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
+                <span class="text-blue-400 font-semibold">Docs Mockup:</span>
+                <div class="truncate text-[#94A3B8] mt-0.5">admin@acme-demo.test</div>
+              </div>
+            </div>
+            <!-- Agencies -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:border-[#334155] transition-colors">
+              <div>
+                <div
+                  class="w-12 h-12 rounded-xl bg-orange-950/40 border border-orange-500/30 text-orange-400 flex items-center justify-center mb-5">
+                  <span translate="no" class="material-symbols-outlined text-[24px]">business_center</span>
+                </div>
+                <h3 class="font-geist text-lg font-semibold text-[#F8FAFC] mb-2" data-i18n="use.agency">Agencies &amp;
+                  Consultants</h3>
+                <p class="text-sm text-[#94A3B8] leading-relaxed mb-6" data-i18n="use.agencyBody">
+                  Share progress without violating client NDAs or exposing competitor brands and revenue numbers.
+                </p>
+              </div>
+              <div class="bg-[#0F172A] border border-[#1E293B] p-3 rounded-xl font-mono text-[11px] text-[#F8FAFC]">
+                <span class="text-orange-400 font-semibold">NDA Protected</span>
+                <div class="truncate text-[#94A3B8] mt-0.5">MRR: [REDACTED_FINANCIAL]</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 8: FEATURE SPOTLIGHT & GRID ==================== -->
+      <section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <!-- Wide Spotlight Card: Synthetic Data Replacement -->
+          <div class="bg-[#111827] border border-[#1E293B] rounded-3xl p-8 md:p-12 shadow-md mb-16">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              <div class="lg:col-span-6 flex flex-col gap-4">
+                <span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold"
+                  data-i18n="spot.eyebrow">Spotlight Capability</span>
+                <h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold tracking-tight"
+                  data-i18n="spot.title">
+                  Hide sensitive data before you publish
+                </h2>
+                <p class="text-base text-[#94A3B8] leading-relaxed" data-i18n="spot.body">
+                  Black out suggested names, labeled locations, and API keys before you share product tutorials and
+                  demos.
+                </p>
+              </div>
+              <div class="lg:col-span-6 bg-[#0F172A] border border-[#1E293B] p-6 rounded-2xl space-y-4">
+                <div
+                  class="bg-[#111827] border border-[#1E293B] p-4 rounded-xl flex items-center justify-between shadow-xs">
+                  <span class="font-mono text-xs sm:text-sm text-red-400 line-through">john@company.com</span>
+                  <span translate="no" class="material-symbols-outlined text-[18px] text-blue-400">arrow_forward</span>
+                  <span class="font-mono text-xs sm:text-sm text-emerald-400 font-medium">user@example.com</span>
+                </div>
+                <div
+                  class="bg-[#111827] border border-[#1E293B] p-4 rounded-xl flex items-center justify-between shadow-xs">
+                  <span class="font-mono text-xs sm:text-sm text-red-400 line-through">sk_live_94f920da82...</span>
+                  <span translate="no" class="material-symbols-outlined text-[18px] text-blue-400">arrow_forward</span>
+                  <span class="font-mono text-xs sm:text-sm text-emerald-400 font-medium">sk_test_••••••••••••</span>
+                </div>
+                <div
+                  class="bg-[#111827] border border-[#1E293B] p-4 rounded-xl flex items-center justify-between shadow-xs">
+                  <span class="font-mono text-xs sm:text-sm text-red-400 line-through">4111 8291 0029 4821</span>
+                  <span translate="no" class="material-symbols-outlined text-[18px] text-blue-400">arrow_forward</span>
+                  <span class="font-mono text-xs sm:text-sm text-emerald-400 font-medium">4000 1234 5678 9010</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- 12-Feature Grid -->
+          <div class="text-center max-w-xl mx-auto mb-12">
+            <h2 class="font-geist text-2xl md:text-3xl text-[#F8FAFC] font-semibold" data-i18n="suite.title">
+              Comprehensive Privacy Suite</h2>
+            <p class="text-base text-[#94A3B8] mt-2" data-i18n="suite.subtitle">Engineered specifically for screenshot
+              triage speed and uncompromised safety.</p>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <!-- 1 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">content_paste</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.paste">Paste from clipboard</span>
+            </div>
+            <!-- 2 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">format_paint</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.blackout">Manual blackout</span>
+            </div>
+            <!-- 3 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">grid_on</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.pixel">Pixelation</span>
+            </div>
+            <!-- 4 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">blur_on</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.blur">Blur for anonymity</span>
+            </div>
+            <!-- 5 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">auto_fix_high</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.auto">Automatic detection</span>
+            </div>
+            <!-- 6 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">find_replace</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.replace">Safe data replacement</span>
+            </div>
+            <!-- 7 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">undo</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.undo">Undo and redo</span>
+            </div>
+            <!-- 8 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">content_copy</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.copy">Copy cleaned image</span>
+            </div>
+            <!-- 9 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-blue-400 text-[22px]">download</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.download">Download as PNG</span>
+            </div>
+            <!-- 10 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">shield</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.local">Local-only processing</span>
+            </div>
+            <!-- 11 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-emerald-400 text-[22px]">offline_pin</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.offline">Offline-ready</span>
+            </div>
+            <!-- 12 -->
+            <div
+              class="bg-[#111827] border border-[#1E293B] hover:border-[#334155] p-4 rounded-2xl flex items-center gap-3.5 transition-colors">
+              <span translate="no" class="material-symbols-outlined text-orange-400 text-[22px]">extension</span>
+              <span class="text-sm text-[#F8FAFC] font-medium" data-i18n="suite.extension">Extension (Coming
+                soon)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 10: SECURITY SECTION ==================== -->
+      <section class="py-16 lg:py-24 border-t border-[#1E293B]" id="security">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div
+            class="bg-gradient-to-b from-[#061e18]/80 to-[#0B0F19] border border-emerald-900/40 rounded-3xl p-8 md:p-14 shadow-sm">
+            <div class="max-w-2xl mx-auto text-center mb-12">
+              <div
+                class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-mono text-xs font-semibold mb-4">
+                <span translate="no" class="material-symbols-outlined text-[16px] text-emerald-400">lock</span>
+                <span data-i18n="security.badge">Zero Cloud Uplink Architecture</span>
+              </div>
+              <h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight"
+                data-i18n="security.title">
+                Your screenshot is private by design.
+              </h2>
+              <p class="text-base sm:text-lg text-[#94A3B8] mt-2" data-i18n="security.subtitle">
+                No server ingestion pipelines. No background telemetry scraping images.
+              </p>
+            </div>
+            <!-- Architecture Flow Diagram -->
+            <div class="bg-[#111827] border border-[#1E293B] rounded-2xl p-8 shadow-md max-w-4xl mx-auto mb-8">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-center">
+                <!-- Step A -->
+                <div class="p-6 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col items-center gap-3">
+                  <span translate="no" class="material-symbols-outlined text-blue-400 text-[32px]">devices</span>
+                  <div class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="security.device">User Device
+                  </div>
+                  <p class="text-xs text-[#94A3B8]" data-i18n="security.deviceBody">Browser sandbox hosts image payload
+                    strictly in memory.</p>
+                </div>
+                <!-- Arrow 1 -->
+                <div class="hidden md:flex flex-col items-center justify-center text-emerald-400">
+                  <span translate="no" class="material-symbols-outlined text-[30px]">arrow_right_alt</span>
+                  <span class="font-mono text-[11px] font-semibold mt-1" data-i18n="security.hops">Zero Network
+                    Hops</span>
+                </div>
+                <!-- Step B -->
+                <div class="p-6 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col items-center gap-3">
+                  <span translate="no" class="material-symbols-outlined text-emerald-400 text-[32px]">memory</span>
+                  <div class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="security.wasm">Local Wasm
+                    Engine</div>
+                  <p class="text-xs text-[#94A3B8]" data-i18n="security.wasmBody">Tesseract.js WebAssembly runs OCR on
+                    the local CPU. The screenshot and recognized text never leave the tab.</p>
+                </div>
+                <!-- Arrow 2 -->
+                <div class="hidden md:flex flex-col items-center justify-center text-emerald-400">
+                  <span translate="no" class="material-symbols-outlined text-[30px]">arrow_right_alt</span>
+                  <span class="font-mono text-[11px] font-semibold mt-1" data-i18n="security.scrub">Permanent
+                    Scrub</span>
+                </div>
+                <!-- Step C -->
+                <div
+                  class="p-6 rounded-xl bg-[#0F172A] border border-[#1E293B] flex flex-col items-center gap-3 md:col-start-auto">
+                  <span translate="no" class="material-symbols-outlined text-blue-400 text-[32px]">verified</span>
+                  <div class="font-geist text-base font-semibold text-[#F8FAFC]" data-i18n="security.output">Safe
+                    Redacted Output</div>
+                  <p class="text-xs text-[#94A3B8]" data-i18n="security.outputBody">Exported PNG with sanitized
+                    irreversible pixels.</p>
+                </div>
+              </div>
+            </div>
+            <!-- Callout Banner -->
+            <div class="text-center">
+              <p class="font-geist text-base sm:text-lg text-[#F8FAFC] font-semibold" data-i18n="security.offline">
+                Disconnect from the internet after loading the app and it still works.
+              </p>
+              <p class="text-sm text-[#94A3B8] mt-1" data-i18n="security.test">
+                Test it yourself: Turn on Airplane Mode, paste your confidential screen, and redact without a hiccup.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 11: FAQ SECTION ==================== -->
+      <section class="py-16 lg:py-24 bg-[#0B0F19] border-t border-[#1E293B]">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div class="max-w-2xl mx-auto text-center mb-16">
+            <span class="text-xs font-mono uppercase tracking-widest text-blue-400 font-semibold"
+              data-i18n="faq.eyebrow">Questions &amp; Answers</span>
+            <h2 class="font-geist text-3xl md:text-4xl text-[#F8FAFC] font-semibold tracking-tight mt-2"
+              data-i18n="faq.title">
+              Frequently Asked Questions
+            </h2>
+            <p class="text-base sm:text-lg text-[#94A3B8] mt-3" data-i18n="faq.subtitle">
+              Everything you need to know about our cryptographic browser-first approach.
+            </p>
+          </div>
+          <!-- FAQ Accordion Cards -->
+          <div class="max-w-3xl mx-auto space-y-4">
+            <!-- Q1 -->
+            <details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden" open="">
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
+                <span data-i18n="faq.q1">Are my screenshots uploaded to any server?</span>
+                <span translate="no"
+                  class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4"
+                data-i18n="faq.a1">
+                No. Never. Redaktix executes all machine vision, text parsing, and pixel rendering entirely on your
+                machine using WebAssembly and Web Workers. Inspect your browser Network tab to verify zero network
+                requests are dispatched when uploading or editing.
+              </div>
+            </details>
+            <!-- Q2 -->
+            <details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
+                <span data-i18n="faq.q2">Can Redaktix read or train AI models on my screenshots?</span>
+                <span translate="no"
+                  class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4"
+                data-i18n="faq.a2">
+                No. Because the images never reach any external infrastructure, we have zero access to your pixels or
+                data. We cannot train models on your data, sell it, or accidentally expose it in a database breach.
+              </div>
+            </details>
+            <!-- Q3 -->
+            <details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
+                <span data-i18n="faq.q3">Is blackout safer than blur?</span>
+                <span translate="no"
+                  class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4"
+                data-i18n="faq.a3">
+                Yes. While Redaktix offers heavy pixelation and blur options, solid blackout is the gold standard for
+                security. Modern neural networks can sometimes invert shallow blurs, but solid black permanently
+                destroys the underlying pixel data forever.
+              </div>
+            </details>
+            <!-- Q4 -->
+            <details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
+                <span data-i18n="faq.q4">Does it work directly with copied screenshots?</span>
+                <span translate="no"
+                  class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4"
+                data-i18n-html="faq.a4">
+                Yes! You do not need to save images to your desktop. Simply press <kbd translate="no"
+                  class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] text-xs font-mono text-[#F8FAFC] rounded">Cmd+Shift+4</kbd>
+                or <kbd translate="no"
+                  class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] text-xs font-mono text-[#F8FAFC] rounded">Win+Shift+S</kbd>,
+                switch to Redaktix, and hit <kbd translate="no"
+                  class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] text-xs font-mono text-[#F8FAFC] rounded">Cmd+V</kbd>.
+              </div>
+            </details>
+            <!-- Q5 -->
+            <details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
+                <span data-i18n="faq.q5">Which image formats are supported?</span>
+                <span translate="no"
+                  class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4"
+                data-i18n="faq.a5">
+                Redaktix supports PNG, JPG, JPEG, and WebP images. All outputs are exported as standard, lossless PNG
+                files ready for pasting directly into chat or documentation tools.
+              </div>
+            </details>
+            <!-- Q6 -->
+            <details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
+                <span data-i18n="faq.q6">Can teams create automatic privacy rules?</span>
+                <span translate="no"
+                  class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4"
+                data-i18n="faq.a6">
+                Yes, on the Team plan you can define organizational presets: automatically mandate blackout for all
+                Stripe keys, mask company-specific email domains, or require confirmation before downloading any image
+                containing unmasked IP addresses.
+              </div>
+            </details>
+            <!-- Q7 -->
+            <details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
+              <summary
+                class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
+                <span data-i18n="faq.q7">Does Redaktix guarantee every sensitive item will be detected?</span>
+                <span translate="no"
+                  class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4"
+                data-i18n="faq.a7">
+                Automatic detection is an intelligent assistant designed to accelerate your workflow and catch common
+                leaks. However, you always retain full manual control: you can easily drag custom redaction boxes over
+                any unusual or bespoke identifiers before exporting.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+      <!-- ==================== SECTION 12: FINAL CTA ==================== -->
+      <section class="py-16 lg:py-24 border-t border-[#1E293B]">
+        <div class="max-w-[76rem] mx-auto px-4 md:px-8">
+          <div
+            class="bg-[#111827] border border-blue-900/30 rounded-3xl p-10 md:p-16 text-center text-[#F8FAFC] shadow-2xl relative overflow-hidden">
+            <!-- Subtle Glow Highlight -->
+            <div
+              class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none">
+            </div>
+            <div class="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
+              <h2
+                class="font-geist text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight text-[#F8FAFC]"
+                data-i18n="cta.title">
+                Make every screenshot safe to share.
+              </h2>
+              <p class="text-base sm:text-lg text-[#94A3B8] mt-4 mb-8 max-w-lg leading-relaxed"
+                data-i18n="cta.subtitle">
+                Paste a screenshot, remove sensitive information, and share with confidence across your organization.
+              </p>
+              <div class="flex flex-wrap items-center justify-center gap-4">
+                <button
+                  class="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-600/25 hover:shadow-xl transition-all flex items-center gap-2">
+                  <span translate="no" class="material-symbols-outlined text-[20px]">content_paste</span>
+                  <span data-i18n="cta.try">Try Redaktix free</span>
+                  <kbd translate="no"
+                    class="ml-1 px-2 py-0.5 text-xs font-mono bg-blue-700/60 text-blue-100 rounded border border-blue-400/30">⌘V</kbd>
+                </button>
+              </div>
+              <div class="flex items-center gap-4 text-xs font-mono text-[#94A3B8] mt-6">
+                <span data-i18n="cta.noSignup">No signup</span>
+                <span>•</span>
+                <span data-i18n="cta.noUploads">No uploads</span>
+                <span>•</span>
+                <span data-i18n="cta.noStorage">No image storage</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="w-full bg-[#0B0F19] border-t border-[#1E293B] mt-auto">
+    <div class="max-w-[76rem] mx-auto px-4 md:px-8 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 pb-12 border-b border-[#1E293B]">
+        <!-- Brand column -->
+        <div class="lg:col-span-4 flex flex-col gap-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 flex items-center justify-center shrink-0">
+              <img alt="Redaktix logo" class="w-full h-full object-contain" src="/icons/icon-192.png" />
+            </div>
+            <span class="font-geist text-lg font-semibold text-[#F8FAFC]">Redaktix</span>
+          </div>
+          <p class="text-sm text-[#94A3B8] max-w-sm leading-relaxed" data-i18n="footer.blurb">
+            Privacy-first screenshot sharing for modern teams.
           </p>
-</div>
-<!-- FAQ Accordion Cards -->
-<div class="max-w-3xl mx-auto space-y-4">
-<!-- Q1 -->
-<details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden" open="">
-<summary class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
-<span data-i18n="faq.q1">Are my screenshots uploaded to any server?</span>
-<span translate="no" class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
-</summary>
-<div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4" data-i18n="faq.a1">
-              No. Never. Redaktix executes all machine vision, text parsing, and pixel rendering entirely on your machine using WebAssembly and Web Workers. Inspect your browser Network tab to verify zero network requests are dispatched when uploading or editing.
-            </div>
-</details>
-<!-- Q2 -->
-<details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
-<summary class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
-<span data-i18n="faq.q2">Can Redaktix read or train AI models on my screenshots?</span>
-<span translate="no" class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
-</summary>
-<div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4" data-i18n="faq.a2">
-              No. Because the images never reach any external infrastructure, we have zero access to your pixels or data. We cannot train models on your data, sell it, or accidentally expose it in a database breach.
-            </div>
-</details>
-<!-- Q3 -->
-<details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
-<summary class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
-<span data-i18n="faq.q3">Is blackout safer than blur?</span>
-<span translate="no" class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
-</summary>
-<div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4" data-i18n="faq.a3">
-              Yes. While Redaktix offers heavy pixelation and blur options, solid blackout is the gold standard for security. Modern neural networks can sometimes invert shallow blurs, but solid black permanently destroys the underlying pixel data forever.
-            </div>
-</details>
-<!-- Q4 -->
-<details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
-<summary class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
-<span data-i18n="faq.q4">Does it work directly with copied screenshots?</span>
-<span translate="no" class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
-</summary>
-<div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4" data-i18n-html="faq.a4">
-              Yes! You do not need to save images to your desktop. Simply press <kbd translate="no" class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] text-xs font-mono text-[#F8FAFC] rounded">Cmd+Shift+4</kbd> or <kbd translate="no" class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] text-xs font-mono text-[#F8FAFC] rounded">Win+Shift+S</kbd>, switch to Redaktix, and hit <kbd translate="no" class="px-2 py-0.5 bg-[#172033] border border-[#1E293B] text-xs font-mono text-[#F8FAFC] rounded">Cmd+V</kbd>.
-            </div>
-</details>
-<!-- Q5 -->
-<details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
-<summary class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
-<span data-i18n="faq.q5">Which image formats are supported?</span>
-<span translate="no" class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
-</summary>
-<div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4" data-i18n="faq.a5">
-              Redaktix supports PNG, JPG, JPEG, and WebP images. All outputs are exported as standard, lossless PNG files ready for pasting directly into chat or documentation tools.
-            </div>
-</details>
-<!-- Q6 -->
-<details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
-<summary class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
-<span data-i18n="faq.q6">Can teams create automatic privacy rules?</span>
-<span translate="no" class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
-</summary>
-<div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4" data-i18n="faq.a6">
-              Yes, on the Team plan you can define organizational presets: automatically mandate blackout for all Stripe keys, mask company-specific email domains, or require confirmation before downloading any image containing unmasked IP addresses.
-            </div>
-</details>
-<!-- Q7 -->
-<details class="group bg-[#111827] border border-[#1E293B] rounded-2xl shadow-sm overflow-hidden">
-<summary class="flex items-center justify-between p-6 cursor-pointer list-none font-geist text-base font-semibold text-[#F8FAFC] select-none hover:text-blue-400 transition-colors">
-<span data-i18n="faq.q7">Does Redaktix guarantee every sensitive item will be detected?</span>
-<span translate="no" class="material-symbols-outlined text-[#94A3B8] group-open:rotate-180 transition-transform">expand_more</span>
-</summary>
-<div class="px-6 pb-6 text-sm text-[#94A3B8] leading-relaxed border-t border-[#1E293B]/60 pt-4" data-i18n="faq.a7">
-              Automatic detection is an intelligent assistant designed to accelerate your workflow and catch common leaks. However, you always retain full manual control: you can easily drag custom redaction boxes over any unusual or bespoke identifiers before exporting.
-            </div>
-</details>
-</div>
-</div>
-</section>
-<!-- ==================== SECTION 12: FINAL CTA ==================== -->
-<section class="py-16 lg:py-24 border-t border-[#1E293B]">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8">
-<div class="bg-[#111827] border border-blue-900/30 rounded-3xl p-10 md:p-16 text-center text-[#F8FAFC] shadow-2xl relative overflow-hidden">
-<!-- Subtle Glow Highlight -->
-<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
-<div class="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
-<h2 class="font-geist text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight text-[#F8FAFC]" data-i18n="cta.title">
-              Make every screenshot safe to share.
-            </h2>
-<p class="text-base sm:text-lg text-[#94A3B8] mt-4 mb-8 max-w-lg leading-relaxed" data-i18n="cta.subtitle">
-              Paste a screenshot, remove sensitive information, and share with confidence across your organization.
-            </p>
-<div class="flex flex-wrap items-center justify-center gap-4">
-<button class="px-8 py-3.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-600/25 hover:shadow-xl transition-all flex items-center gap-2">
-<span translate="no" class="material-symbols-outlined text-[20px]">content_paste</span>
-<span data-i18n="cta.try">Try Redaktix free</span>
-<kbd translate="no" class="ml-1 px-2 py-0.5 text-xs font-mono bg-blue-700/60 text-blue-100 rounded border border-blue-400/30">⌘V</kbd>
-</button>
-</div>
-<div class="flex items-center gap-4 text-xs font-mono text-[#94A3B8] mt-6">
-<span data-i18n="cta.noSignup">No signup</span>
-<span>•</span>
-<span data-i18n="cta.noUploads">No uploads</span>
-<span>•</span>
-<span data-i18n="cta.noStorage">No image storage</span>
-</div>
-</div>
-</div>
-</div>
-</section>
-</div>
-</main>
-<!-- ==================== FOOTER ==================== -->
-<footer class="w-full bg-[#0B0F19] border-t border-[#1E293B] mt-auto">
-<div class="max-w-[76rem] mx-auto px-4 md:px-8 py-12">
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 pb-12 border-b border-[#1E293B]">
-<!-- Brand column -->
-<div class="lg:col-span-4 flex flex-col gap-4">
-<div class="flex items-center gap-2.5">
-<div class="w-7 h-7 flex items-center justify-center shrink-0">
-<img alt="Redaktix logo" class="w-full h-full object-contain" src="/icons/icon-192.png"/>
-</div>
-<span class="font-geist text-lg font-semibold text-[#F8FAFC]">Redaktix</span>
-</div>
-<p class="text-sm text-[#94A3B8] max-w-sm leading-relaxed" data-i18n="footer.blurb">
-          Privacy-first screenshot sharing for modern teams.
-        </p>
-<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-mono text-xs max-w-fit">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-<span data-i18n="footer.localNote">Images are processed locally and never uploaded.</span>
-</div>
-</div>
-<!-- Links: Product -->
-<div class="lg:col-span-4 flex flex-col gap-3 text-sm">
-<span class="text-xs font-mono uppercase tracking-wider text-[#F8FAFC] font-semibold" data-i18n="nav.product">Product</span>
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="product" href="#product" data-i18n="footer.overview">Product Overview</a>
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="how-it-works" href="#how-it-works" data-i18n="nav.how">How It Works</a>
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="use-cases" href="#use-cases" data-i18n="nav.useCases">Use Cases</a>
-</div>
-<!-- Links: Trust & Legal -->
-<div class="lg:col-span-4 flex flex-col gap-3 text-sm">
-<span class="text-xs font-mono uppercase tracking-wider text-[#F8FAFC] font-semibold" data-i18n="footer.trust">Trust &amp; Legal</span>
-<a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="security" href="/security/" data-i18n="footer.security">Security Proof</a>
-<button class="text-left text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" type="button" data-open-dialog="privacyPolicyDialog" data-i18n="legal.privacy">Privacy Policy</button>
-<button class="text-left text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" type="button" data-open-dialog="termsDialog" data-i18n="legal.terms">Terms of Service</button>
-</div>
-</div>
-<div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#94A3B8]">
-<p data-i18n="footer.copy">© 2025 Redaktix Inc. All rights reserved.</p>
-<div class="flex items-center gap-4">
-<span class="font-mono text-emerald-400 flex items-center gap-1.5">
-<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span data-i18n="security.badge">Zero Cloud Uplink Architecture</span>
-        </span>
-</div>
-</div>
-</div>
-</footer>
-<dialog id="privacyPolicyDialog" class="legal-dialog">
-<h2 data-i18n="legal.privacy">Privacy Policy</h2>
-<p data-i18n="legal.privacyBody">Redaktix is 100% client-side and local-first. Screenshots, uploaded files, images, and OCR text are processed inside your browser. They do not leave the tab, and they are not sent to a Redaktix server or any other server.</p>
-<button  type="button" data-close-dialog data-i18n="legal.close">Close</button>
-</dialog>
-<dialog id="termsDialog" class="legal-dialog">
-<h2 data-i18n="legal.terms">Terms of Service</h2>
-<p data-i18n="legal.termsBody">Redaktix provides automated redaction assistance. You are responsible for reviewing the final redacted image and confirming that sensitive information is hidden before you share or export it.</p>
-<button  type="button" data-close-dialog data-i18n="legal.close">Close</button>
-</dialog>
-<!-- Interactive micro-feedback script -->
-<script>
-  // Mobile Nav Toggle
-  const mobileBtn = document.getElementById('mobileMenuBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
-  if (mobileBtn && mobileMenu) {
-    mobileBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
+          <div
+            class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-emerald-300 font-mono text-xs max-w-fit">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span data-i18n="footer.localNote">Images are processed locally and never uploaded.</span>
+          </div>
+        </div>
+        <!-- Links: Product -->
+        <div class="lg:col-span-4 flex flex-col gap-3 text-sm">
+          <span class="text-xs font-mono uppercase tracking-wider text-[#F8FAFC] font-semibold"
+            data-i18n="nav.product">Product</span>
+          <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="product" href="#product"
+            data-i18n="footer.overview">Product Overview</a>
+          <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="how-it-works" href="#how-it-works"
+            data-i18n="nav.how">How It Works</a>
+          <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="use-cases" href="#use-cases"
+            data-i18n="nav.useCases">Use Cases</a>
+        </div>
+        <!-- Links: Trust & Legal -->
+        <div class="lg:col-span-4 flex flex-col gap-3 text-sm">
+          <span class="text-xs font-mono uppercase tracking-wider text-[#F8FAFC] font-semibold"
+            data-i18n="footer.trust">Trust &amp; Legal</span>
+          <a class="text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" data-path="security" href="/security/"
+            data-i18n="footer.security">Security Proof</a>
+          <button class="text-left text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" type="button"
+            data-open-dialog="privacyPolicyDialog" data-i18n="legal.privacy">Privacy Policy</button>
+          <button class="text-left text-[#94A3B8] hover:text-[#F8FAFC] transition-colors" type="button"
+            data-open-dialog="termsDialog" data-i18n="legal.terms">Terms of Service</button>
+        </div>
+      </div>
+      <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#94A3B8]">
+        <p data-i18n="footer.copy">© 2025 Redaktix Inc. All rights reserved.</p>
+        <div class="flex items-center gap-4">
+          <span class="font-mono text-emerald-400 flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span data-i18n="security.badge">Zero Cloud Uplink Architecture</span>
+          </span>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <dialog id="privacyPolicyDialog" class="legal-dialog">
+    <h2 data-i18n="legal.privacy">Privacy Policy</h2>
+    <p data-i18n="legal.privacyBody">Redaktix is 100% client-side and local-first. Screenshots, uploaded files, images,
+      and OCR text are processed inside your browser. They do not leave the tab, and they are not sent to a Redaktix
+      server or any other server.</p>
+    <button type="button" data-close-dialog data-i18n="legal.close">Close</button>
+  </dialog>
+  <dialog id="termsDialog" class="legal-dialog">
+    <h2 data-i18n="legal.terms">Terms of Service</h2>
+    <p data-i18n="legal.termsBody">Redaktix provides automated redaction assistance. You are responsible for reviewing
+      the final redacted image and confirming that sensitive information is hidden before you share or export it.</p>
+    <button type="button" data-close-dialog data-i18n="legal.close">Close</button>
+  </dialog>
+  <!-- Interactive micro-feedback script -->
+  <script>
+    // Mobile Nav Toggle
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+      });
+    }
+
+    // Paste Listener Notification
+    window.addEventListener('paste', () => {
+      const activeNotification = document.createElement('div');
+      activeNotification.className = 'fixed bottom-6 right-6 z-50 bg-[#111827] border border-[#1E293B] text-[#F8FAFC] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 font-mono text-xs';
+      activeNotification.innerHTML = '<span translate="no" class="material-symbols-outlined text-emerald-400 text-[18px]">verified</span> Local WebAssembly Sandbox Loaded: Redaction Active';
+      document.body.appendChild(activeNotification);
+      setTimeout(() => {
+        activeNotification.remove();
+      }, 3500);
     });
-  }
+  </script>
 
-  // Paste Listener Notification
-  window.addEventListener('paste', () => {
-    const activeNotification = document.createElement('div');
-    activeNotification.className = 'fixed bottom-6 right-6 z-50 bg-[#111827] border border-[#1E293B] text-[#F8FAFC] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2.5 font-mono text-xs';
-    activeNotification.innerHTML = '<span translate="no" class="material-symbols-outlined text-emerald-400 text-[18px]">verified</span> Local WebAssembly Sandbox Loaded: Redaction Active';
-    document.body.appendChild(activeNotification);
-    setTimeout(() => {
-      activeNotification.remove();
-    }, 3500);
-  });
-</script>
+  <script type="module" src="/src/js/theme.js"></script>
+  <script type="module" src="/src/js/landing.js"></script>
+</body>
 
-<script type="module" src="/src/js/theme.js"></script>
-<script type="module" src="/src/js/landing.js"></script>
-</body></html>
+</html>
