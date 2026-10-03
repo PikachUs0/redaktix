@@ -99,6 +99,16 @@ describe("marketing analytics architecture boundary", () => {
     assert.equal(html.includes("gtag("), false);
   });
 
+  it("index.html includes Vercel Web Analytics stub; editor.html does not", () => {
+    const landing = readFileSync(join(ROOT, "index.html"), "utf8");
+    const editor = readFileSync(join(ROOT, "editor.html"), "utf8");
+    assert.match(landing, /window\.va\s*=\s*window\.va/);
+    assert.match(landing, /\/_vercel\/insights\/script\.js/);
+    assert.equal(editor.includes("/_vercel/insights/script.js"), false);
+    assert.equal(editor.includes("window.va"), false);
+    assert.equal(editor.includes("window.vaq"), false);
+  });
+
   it("production editor/tool bundles do not include the marketing hook (when dist present)", () => {
     const dist = join(ROOT, "dist");
     const ci = process.env.CI === "1" || process.env.CI === "true";

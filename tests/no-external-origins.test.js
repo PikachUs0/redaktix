@@ -51,6 +51,8 @@ const FORBIDDEN_APP_TELEMETRY = [
   "redaktix-analytics-endpoint",
   "marketing-analytics",
   "sendBeacon",
+  "/_vercel/insights/script.js",
+  "window.vaq",
 ];
 
 const MARKETING_REL = new Set([
@@ -166,8 +168,15 @@ describe("no external origins — app vs marketing boundary", () => {
       }
 
       if (!isLandingDist) {
-        for (const snippet of ["initMarketingAnalytics", "redaktix-analytics-endpoint", "marketing-analytics"]) {
-          if (text.includes(snippet)) hits.push(`${rel}: marketing hook leaked into app dist (${snippet})`);
+        for (const snippet of [
+          "initMarketingAnalytics",
+          "redaktix-analytics-endpoint",
+          "marketing-analytics",
+          "/_vercel/insights/script.js",
+          "window.va",
+          "window.vaq",
+        ]) {
+          if (text.includes(snippet)) hits.push(`${rel}: marketing analytics leaked into app dist (${snippet})`);
         }
       }
 
