@@ -281,12 +281,14 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeHistoryShortcuts();
   initializeEditorShortcuts();
   initializeLocalProcessingBadge();
+  initializeMobileDesktopNotice();
   registerRedaktixWorker();
   initializeToolShortcutLabels();
   initializeZoomControls();
   ensureReviewViewportObserver();
   consumeToolHandoff();
   renderSensitiveDataPanel();
+  initializeUnifiedMobileToolbar();
 
   function imageFileFromClipboard(clipboardData) {
     if (!clipboardData) return null;
@@ -450,40 +452,43 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="editor-image-toolbar">
         <div class="editor-file-summary">
           <span class="material-symbols-outlined" aria-hidden="true">image</span>
-          <div>
+          <div class="editor-file-summary-text">
             <strong id="activeFileName"></strong>
             <span id="activeImageDimensions"></span>
           </div>
         </div>
-        <div class="editor-toolbar-actions">
-          <span id="activeToolStatus" class="editor-active-tool-status" data-i18n="editor.statusBlackout">Blackout tool active</span>
-          <button id="compareViewButton" class="editor-compare-button" type="button" aria-pressed="false">
-            <span class="material-symbols-outlined" aria-hidden="true">compare</span>
-            <span data-i18n="editor.compare">Compare</span>
-          </button>
-          <div class="editor-scan-group">
-            <button id="scanSensitiveDataButton" class="editor-scan-button" type="button">
-              <span class="material-symbols-outlined" aria-hidden="true">document_scanner</span>
-              <span data-i18n="editor.scan">Scan sensitive data</span>
+        <div class="editor-unified-tool-rail" id="editorUnifiedToolRail">
+          <div class="editor-drawing-tools-slot" id="editorDrawingToolsSlot"></div>
+          <div class="editor-toolbar-actions">
+            <span id="activeToolStatus" class="editor-active-tool-status" data-i18n="editor.statusBlackout">Blackout tool active</span>
+            <button id="compareViewButton" class="editor-compare-button" type="button" aria-pressed="false">
+              <span class="material-symbols-outlined" aria-hidden="true">compare</span>
+              <span data-i18n="editor.compare">Compare</span>
             </button>
-            <button
-              type="button"
-              class="editor-scan-note-toggle"
-              data-i18n-aria="editor.scanAlwaysOnNote"
-              data-i18n-title="editor.scanAlwaysOnNote"
-              aria-expanded="false"
-              aria-controls="editorScanAlwaysOnNote"
-            >
-              <span class="material-symbols-outlined" aria-hidden="true">info</span>
+            <div class="editor-scan-group">
+              <button id="scanSensitiveDataButton" class="editor-scan-button" type="button">
+                <span class="material-symbols-outlined" aria-hidden="true">document_scanner</span>
+                <span data-i18n="editor.scan">Scan sensitive data</span>
+              </button>
+              <button
+                type="button"
+                class="editor-scan-note-toggle"
+                data-i18n-aria="editor.scanAlwaysOnNote"
+                data-i18n-title="editor.scanAlwaysOnNote"
+                aria-expanded="false"
+                aria-controls="editorScanAlwaysOnNote"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">info</span>
+              </button>
+              <p id="editorScanAlwaysOnNote" class="editor-scan-always-on-note" data-i18n="editor.scanAlwaysOnNote" hidden>
+                Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned.
+              </p>
+            </div>
+            <button id="replaceImageButton" class="editor-replace-image-button" type="button">
+              <span class="material-symbols-outlined" aria-hidden="true">upload</span>
+              <span data-i18n="editor.openAnother">Open another image</span>
             </button>
-            <p id="editorScanAlwaysOnNote" class="editor-scan-always-on-note" data-i18n="editor.scanAlwaysOnNote" hidden>
-              Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned.
-            </p>
           </div>
-          <button id="replaceImageButton" class="editor-replace-image-button" type="button">
-            <span class="material-symbols-outlined" aria-hidden="true">upload</span>
-            <span data-i18n="editor.openAnother">Open another image</span>
-          </button>
         </div>
       </div>
       <div
@@ -543,9 +548,16 @@ document.addEventListener("DOMContentLoaded", () => {
     editorState.overlay = overlay;
     editorState.overlayContext = overlay.getContext("2d");
 
-    document.getElementById("activeFileName").textContent = file.name;
-    document.getElementById("activeImageDimensions").textContent =
-      `${imageWidth} × ${imageHeight} px`;
+    const fileNameLabel = document.getElementById("activeFileName");
+    if (fileNameLabel) {
+      fileNameLabel.textContent = file.name;
+      fileNameLabel.title = file.name;
+    }
+    const dimensionsLabel = document.getElementById("activeImageDimensions");
+    if (dimensionsLabel) {
+      dimensionsLabel.textContent = `${imageWidth} × ${imageHeight} px`;
+      dimensionsLabel.title = `${imageWidth} × ${imageHeight} px`;
+    }
 
     scanButton.addEventListener("click", () => scanImageForSensitiveData(scanButton));
     replaceButton.addEventListener("click", () => openDeviceImagePicker());
@@ -553,6 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
     addCanvasEvents(canvas);
     initializeCompareControls();
     initializeToolButtons();
+    syncUnifiedMobileToolbar();
     updateHeaderFileName(file.name);
     renderCanvas();
     updateCanvasCursor();
@@ -560,6 +573,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.requestAnimationFrame(() => {
       fitCanvasToViewport();
+      syncUnifiedMobileToolbar();
     });
     scanImageForSensitiveData(scanButton);
   }
@@ -6318,8 +6332,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function initializeLocalProcessingBadge() {
     const badge = document.getElementById("localProcessingBadge");
     if (!badge) return;
-    badge.setAttribute("data-i18n", "badge.local");
-    badge.textContent = t("badge.local");
+    badge.setAttribute("data-i18n", "badge.localCompact");
+    badge.setAttribute("title", t("badge.local"));
+    badge.textContent = t("badge.localCompact");
     if (badge.tagName === "A") badge.setAttribute("href", "/security/");
     const popover = document.getElementById("localProcessingPopover");
     const message = popover?.querySelector("p");
@@ -6327,6 +6342,41 @@ document.addEventListener("DOMContentLoaded", () => {
       message.setAttribute("data-i18n", "badge.popover");
       message.textContent = t("badge.popover");
     }
+  }
+
+  const MOBILE_DESKTOP_NOTICE_KEY = "redaktix-mobile-desktop-notice-dismissed";
+
+  function initializeMobileDesktopNotice() {
+    const banner = document.getElementById("mobileDesktopNotice");
+    const dismiss = document.getElementById("mobileDesktopNoticeDismiss");
+    if (!banner || !dismiss) return;
+
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(MOBILE_DESKTOP_NOTICE_KEY) === "1";
+    } catch {
+      dismissed = false;
+    }
+
+    if (dismissed) {
+      banner.hidden = true;
+      document.body.classList.remove("has-mobile-desktop-notice");
+      return;
+    }
+
+    banner.hidden = false;
+    document.body.classList.add("has-mobile-desktop-notice");
+    applyI18n(banner);
+
+    dismiss.addEventListener("click", () => {
+      banner.hidden = true;
+      document.body.classList.remove("has-mobile-desktop-notice");
+      try {
+        localStorage.setItem(MOBILE_DESKTOP_NOTICE_KEY, "1");
+      } catch {
+        /* private mode */
+      }
+    });
   }
 
   function setLocalProcessingPopoverOpen(open) {
@@ -6369,6 +6419,12 @@ document.addEventListener("DOMContentLoaded", () => {
       stopReviewSession();
       renderSensitiveDataPanel();
       renderCanvas();
+      if (editorState.reviewFinished) {
+        refitCanvasAfterSheetChange();
+        window.setTimeout(() => {
+          fitCanvasToViewport();
+        }, 120);
+      }
       return;
     }
     const nextIndex = ((index % detections.length) + detections.length) % detections.length;
@@ -6415,21 +6471,45 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!reducedMotion) pulseReviewFocus(detection.id);
   }
 
-  function reviewCoveredPanelWidth(canvasContainer, sidePanel) {
-    if (!canvasContainer || !sidePanel || sidePanel.hidden) return 0;
+  function reviewCoveredPanelInsets(canvasContainer, sidePanel) {
+    if (!canvasContainer || !sidePanel || sidePanel.hidden) {
+      return { width: 0, height: 0 };
+    }
     const containerRect = canvasContainer.getBoundingClientRect();
     const panelRect = sidePanel.getBoundingClientRect();
-    const overlap = Math.min(containerRect.right, panelRect.right) - Math.max(containerRect.left, panelRect.left);
-    if (overlap <= 0) return 0;
-    return Math.min(sidePanel.clientWidth, overlap);
+    const overlapX = Math.min(containerRect.right, panelRect.right) - Math.max(containerRect.left, panelRect.left);
+    const overlapY = Math.min(containerRect.bottom, panelRect.bottom) - Math.max(containerRect.top, panelRect.top);
+    if (overlapX <= 0 || overlapY <= 0) {
+      return { width: 0, height: 0 };
+    }
+
+    const panelStyle = window.getComputedStyle(sidePanel);
+    const isBottomSheet =
+      panelStyle.position === "fixed" ||
+      isMobileEditorLayout() ||
+      (panelRect.width >= containerRect.width * 0.85 && panelRect.top >= containerRect.top + containerRect.height * 0.2);
+
+    // Mobile bottom sheet overlaps the full canvas width; only the covered height matters.
+    if (isBottomSheet) {
+      return { width: 0, height: Math.max(0, overlapY) };
+    }
+
+    return {
+      width: Math.min(sidePanel.clientWidth || panelRect.width, overlapX),
+      height: 0,
+    };
+  }
+
+  function reviewCoveredPanelWidth(canvasContainer, sidePanel) {
+    return reviewCoveredPanelInsets(canvasContainer, sidePanel).width;
   }
 
   function reviewVisibleCanvasSize(canvasContainer) {
     const sidePanel = document.getElementById("sensitiveDataPanel");
-    const sidePanelWidth = reviewCoveredPanelWidth(canvasContainer, sidePanel);
+    const insets = reviewCoveredPanelInsets(canvasContainer, sidePanel);
     return {
-      visibleWidth: Math.max(1, canvasContainer.clientWidth - sidePanelWidth),
-      visibleHeight: Math.max(1, canvasContainer.clientHeight),
+      visibleWidth: Math.max(1, canvasContainer.clientWidth - insets.width),
+      visibleHeight: Math.max(1, canvasContainer.clientHeight - insets.height),
     };
   }
 
@@ -6770,43 +6850,139 @@ document.addEventListener("DOMContentLoaded", () => {
     showStatus("Custom rule saved. Click Scan sensitive data to apply it.");
   }
 
+  function privacyReviewHeading(count) {
+    if (count > 1) return t("editor.privacyReviewCount", { n: count });
+    if (count === 1) return t("editor.privacyReviewCountOne", { n: count });
+    return t("editor.sensitive");
+  }
+
+  function isMobileEditorLayout() {
+    return Boolean(window.matchMedia?.("(max-width: 639px)")?.matches);
+  }
+
+  function syncReviewSheetLayoutClass() {
+    if (!sensitiveDataPanel) return;
+    const hidden = Boolean(sensitiveDataPanel.hidden);
+    const complete = sensitiveDataPanel.classList.contains("is-review-complete");
+    const collapsed = sensitiveDataPanel.classList.contains("is-collapsed");
+    const awaiting = sensitiveDataPanel.classList.contains("is-awaiting");
+    document.body.classList.toggle("editor-no-sheet", hidden);
+    document.body.classList.toggle(
+      "editor-sheet-compact",
+      hidden || complete || collapsed || awaiting
+    );
+    document.body.classList.toggle("editor-sheet-complete", complete);
+  }
+
+  function refitCanvasAfterSheetChange() {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        fitCanvasToViewport();
+      });
+    });
+  }
+
+  function bindReviewPanelCollapse(wasCollapsed) {
+    const button = document.getElementById("reviewPanelCollapseButton");
+    if (!button || !sensitiveDataPanel) return;
+    const syncCollapseUi = (collapsed) => {
+      sensitiveDataPanel.classList.toggle("is-collapsed", collapsed);
+      button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      button.setAttribute("aria-label", t(collapsed ? "editor.expandPanel" : "editor.collapsePanel"));
+      button.setAttribute("title", t(collapsed ? "editor.expandPanel" : "editor.collapsePanel"));
+      const icon = button.querySelector(".material-symbols-outlined");
+      if (icon) icon.textContent = collapsed ? "expand_less" : "expand_more";
+      syncReviewSheetLayoutClass();
+      refitCanvasAfterSheetChange();
+    };
+    syncCollapseUi(Boolean(wasCollapsed));
+    button.addEventListener("click", () => {
+      syncCollapseUi(!sensitiveDataPanel.classList.contains("is-collapsed"));
+    });
+  }
+
   function renderSensitiveDataPanel() {
     if (!sensitiveDataPanel) return;
+    const wasCollapsed = sensitiveDataPanel.classList.contains("is-collapsed");
+    sensitiveDataPanel.classList.remove("is-review-complete", "is-awaiting");
+    document.body.classList.remove("editor-sheet-complete", "editor-no-sheet");
+
     if (!editorState.image) {
+      // Mobile empty state: hide the sheet entirely so it does not cover the upload UI.
+      if (isMobileEditorLayout()) {
+        sensitiveDataPanel.hidden = true;
+        sensitiveDataPanel.classList.add("is-awaiting");
+        sensitiveDataPanel.innerHTML = "";
+        syncReviewSheetLayoutClass();
+        return;
+      }
+
+      sensitiveDataPanel.hidden = false;
+      sensitiveDataPanel.classList.add("is-awaiting");
       sensitiveDataPanel.innerHTML = `
         <div class="real-detection-panel-header">
-          <h2 class="real-detection-panel-heading" data-i18n="editor.sensitive">Sensitive Data</h2>
-          <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
+          <div class="real-detection-panel-title">
+            <span class="material-symbols-outlined real-detection-shield" aria-hidden="true">security</span>
+            <h2 class="real-detection-panel-heading">${escapeHtml(t("editor.sensitive"))}</h2>
+          </div>
+          <div class="real-detection-panel-meta">
+            <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
+          </div>
         </div>
-        <div class="real-detection-awaiting">
-          <span class="material-symbols-outlined" aria-hidden="true">photo_library</span>
-          <p data-i18n="editor.loadShot">Load a screenshot. Analysis results will appear here.</p>
+        <div class="review-sheet-body">
+          <div class="real-detection-awaiting">
+            <span class="material-symbols-outlined" aria-hidden="true">photo_library</span>
+            <p data-i18n="editor.loadShot">Load a screenshot. Analysis results will appear here.</p>
+          </div>
         </div>
       `;
       applyI18n(sensitiveDataPanel);
       document.getElementById("customRulesButton")?.addEventListener("click", openCustomRulesDialog);
+      syncReviewSheetLayoutClass();
       return;
     }
+
+    sensitiveDataPanel.hidden = false;
     const detections = editorState.detections;
     if (!detections.length && editorState.reviewFinished) {
+      const collapseOnMobile = isMobileEditorLayout();
+      sensitiveDataPanel.classList.add("is-review-complete");
       sensitiveDataPanel.innerHTML = `
-        <div class="review-complete-card">
-          <span class="material-symbols-outlined" aria-hidden="true">verified</span>
-          <h2 data-i18n="editor.readyTitle">${escapeHtml(REVIEW_COMPLETE_TITLE)}</h2>
-          <p data-i18n="editor.readyBody">Every pending suggestion has been resolved. The image is ready to export.</p>
-          <button id="reviewExportButton" class="review-action review-action-redact" type="button" data-i18n="editor.download">Download</button>
-          <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
+        <div class="review-sheet-handle" aria-hidden="true"></div>
+        <div class="real-detection-panel-header">
+          <div class="real-detection-panel-title">
+            <span class="material-symbols-outlined real-detection-shield" aria-hidden="true">verified</span>
+            <h2 class="real-detection-panel-heading">${escapeHtml(t("editor.readyTitle"))}</h2>
+            <button id="reviewPanelCollapseButton" class="review-panel-collapse" type="button" aria-expanded="true">
+              <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+            </button>
+          </div>
+          <div class="real-detection-panel-meta">
+            <button id="reviewExportButton" class="review-action review-action-redact review-complete-download" type="button" data-i18n="editor.download">Download</button>
+          </div>
+        </div>
+        <div class="review-sheet-body">
+          <div class="review-complete-card">
+            <span class="material-symbols-outlined" aria-hidden="true">verified</span>
+            <p data-i18n="editor.readyBody">${escapeHtml(t("editor.readyBody"))}</p>
+            <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
+          </div>
         </div>
       `;
       applyI18n(sensitiveDataPanel);
+      // On mobile, collapse the complete sheet so it stops covering the canvas.
+      bindReviewPanelCollapse(collapseOnMobile || wasCollapsed);
       document.getElementById("reviewExportButton")?.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
         openExportFromReview(event.currentTarget);
       });
       document.getElementById("customRulesButton")?.addEventListener("click", openCustomRulesDialog);
+      syncReviewSheetLayoutClass();
+      refitCanvasAfterSheetChange();
       return;
     }
+
     const reviewIndex = detections.length
       ? Math.min(Math.max(editorState.reviewIndex, 0), detections.length - 1)
       : -1;
@@ -6816,12 +6992,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const countText = detections.length
       ? t("editor.reviewPosition", { current: reviewIndex + 1, total: detections.length })
       : getDetectionSummary(0);
+    const headingText = detections.length
+      ? privacyReviewHeading(detections.length)
+      : t("editor.sensitive");
+
     sensitiveDataPanel.innerHTML = `
+      <div class="review-sheet-handle" aria-hidden="true"></div>
       <div class="real-detection-panel-header">
         <div class="real-detection-panel-title">
           <span class="material-symbols-outlined real-detection-shield" aria-hidden="true">security</span>
-          <h2 class="real-detection-panel-heading" data-i18n="${detections.length ? "editor.privacyReview" : "editor.sensitive"}">${detections.length ? "Privacy Review" : "Sensitive Data"}</h2>
-          <button id="reviewPanelCollapseButton" class="review-panel-collapse" type="button" aria-expanded="true" data-i18n-aria="editor.collapsePanel" data-i18n-title="editor.collapsePanel">
+          <h2 class="real-detection-panel-heading" title="${escapeHtml(headingText)}">${escapeHtml(headingText)}</h2>
+          <button id="reviewPanelCollapseButton" class="review-panel-collapse" type="button" aria-expanded="true">
             <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
           </button>
         </div>
@@ -6831,25 +7012,21 @@ document.addEventListener("DOMContentLoaded", () => {
           <button id="hideAllDetectionsButton" class="real-hide-all-button" type="button" data-i18n="editor.hideAll" ${detections.length ? "" : "disabled"}>Hide all</button>
         </div>
       </div>
-      <div class="real-detection-notice">
-        <span class="material-symbols-outlined" aria-hidden="true">info</span>
-        <p>${escapeHtml(summaryText)}</p>
-      </div>
-      <div class="real-detection-list">${detections.length ? createReviewStepMarkup(detections[reviewIndex], reviewIndex, detections.length) : createDetectionListMarkup(detections)}</div>
-      <div class="real-detection-panel-footer">
-        <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-        <span data-i18n="editor.localAnalysis">Analysis runs locally in this browser</span>
+      <div class="review-sheet-body">
+        <div class="real-detection-notice">
+          <span class="material-symbols-outlined" aria-hidden="true">info</span>
+          <p>${escapeHtml(summaryText)}</p>
+        </div>
+        <div class="real-detection-list">${detections.length ? createReviewStepMarkup(detections[reviewIndex], reviewIndex, detections.length) : createDetectionListMarkup(detections)}</div>
+        <div class="real-detection-panel-footer">
+          <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+          <span data-i18n="editor.localAnalysis">Analysis runs locally in this browser</span>
+        </div>
       </div>
     `;
     applyI18n(sensitiveDataPanel);
+    bindReviewPanelCollapse(wasCollapsed);
 
-    document.getElementById("reviewPanelCollapseButton")?.addEventListener("click", () => {
-      const collapsed = sensitiveDataPanel.classList.toggle("is-collapsed");
-      const button = document.getElementById("reviewPanelCollapseButton");
-      button?.setAttribute("aria-expanded", collapsed ? "false" : "true");
-      const icon = button?.querySelector(".material-symbols-outlined");
-      if (icon) icon.textContent = collapsed ? "expand_less" : "expand_more";
-    });
     document.getElementById("reviewPreviousButton")?.addEventListener("click", () => {
       focusReviewDetection(stepReviewIndex(editorState.reviewIndex, editorState.detections.length, -1));
     });
@@ -6870,16 +7047,55 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("customRulesButton")?.addEventListener("click", openCustomRulesDialog);
     document.getElementById("hideAllDetectionsButton")?.addEventListener("click", applyAllDetectionsAsBlackout);
-    const detectionList =
-      sensitiveDataPanel.querySelector(
-        ".real-detection-list"
-      );
-
+    const detectionList = sensitiveDataPanel.querySelector(".real-detection-list");
     if (detectionList) {
       window.requestAnimationFrame(() => {
         detectionList.scrollTop = 0;
       });
     }
+    syncReviewSheetLayoutClass();
+  }
+
+  function syncUnifiedMobileToolbar() {
+    const tools = document.querySelector(".editor-tool-rail-tools");
+    const rail = document.querySelector(".editor-tool-rail");
+    const shortcuts = document.getElementById("toggle-shortcuts-btn");
+    const slot = document.getElementById("editorDrawingToolsSlot");
+    if (!tools || !rail || !slot) return;
+
+    const mobile = window.matchMedia("(max-width: 639px)").matches;
+    if (mobile) {
+      while (tools.firstChild) slot.appendChild(tools.firstChild);
+      if (shortcuts && shortcuts.parentElement !== slot) slot.appendChild(shortcuts);
+      rail.hidden = true;
+      rail.setAttribute("aria-hidden", "true");
+      document.body.classList.add("editor-mobile-unified-toolbar");
+    } else {
+      Array.from(slot.childNodes).forEach((node) => {
+        if (node.id === "toggle-shortcuts-btn") rail.appendChild(node);
+        else tools.appendChild(node);
+      });
+      rail.hidden = false;
+      rail.removeAttribute("aria-hidden");
+      document.body.classList.remove("editor-mobile-unified-toolbar");
+    }
+  }
+
+  function initializeUnifiedMobileToolbar() {
+    syncUnifiedMobileToolbar();
+    if (initializeUnifiedMobileToolbar.bound) return;
+    initializeUnifiedMobileToolbar.bound = true;
+    const media = window.matchMedia("(max-width: 639px)");
+    const onChange = () => {
+      syncUnifiedMobileToolbar();
+      renderSensitiveDataPanel();
+      refitCanvasAfterSheetChange();
+    };
+    if (typeof media.addEventListener === "function") media.addEventListener("change", onChange);
+    else if (typeof media.addListener === "function") media.addListener(onChange);
+    window.addEventListener("orientationchange", () => {
+      window.setTimeout(onChange, 50);
+    });
   }
 
   function createReviewStepMarkup(detection, index, count) {
@@ -6889,12 +7105,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const confidence = Math.round(Number(detection.review?.ocrConfidence ?? detection.confidence ?? 0));
     const warnings = detectionWarnings(detection);
     const navigationDisabled = count < 2 ? "disabled" : "";
+    const styleLabels = {
+      blackout: t("label.blackout"),
+      blur: t("editor.blur"),
+      pixelate: t("editor.pixelate"),
+    };
+    const styleKeys = {
+      blackout: "label.blackout",
+      blur: "editor.blur",
+      pixelate: "editor.pixelate",
+    };
     return `
       <div class="review-step">
         <div class="review-nav">
-          <button id="reviewPreviousButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewPrevious">Previous</button>
+          <button id="reviewPreviousButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewPrevious">${escapeHtml(t("editor.reviewPrevious"))}</button>
           <span class="review-position">${escapeHtml(t("editor.reviewPosition", { current: index + 1, total: count }))}</span>
-          <button id="reviewNextButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewNext">Next</button>
+          <button id="reviewNextButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewNext">${escapeHtml(t("editor.reviewNext"))}</button>
         </div>
         <article class="real-detection-card review-active-card">
           <div class="real-detection-card-heading">
@@ -6905,13 +7131,13 @@ document.addEventListener("DOMContentLoaded", () => {
           ${warnings.map((warning) => `<p class="real-detection-warning">${escapeHtml(localizeReviewWarning(warning))}</p>`).join("")}
           <div class="review-style" role="radiogroup" data-i18n-aria="editor.redactionStyle" aria-label="${escapeHtml(t("editor.redactionStyle"))}">
             ${["blackout", "blur", "pixelate"].map((style) => `
-              <button type="button" class="review-style-option${editorState.redactionStyle === style ? " is-selected" : ""}" data-redaction-style="${style}" role="radio" aria-checked="${editorState.redactionStyle === style ? "true" : "false"}" data-i18n="${style === "blackout" ? "label.blackout" : style === "blur" ? "editor.blur" : "editor.pixelate"}">${style === "blackout" ? "Blackout" : style === "blur" ? "Blur" : "Pixelate"}</button>
+              <button type="button" class="review-style-option${editorState.redactionStyle === style ? " is-selected" : ""}" data-redaction-style="${style}" role="radio" aria-checked="${editorState.redactionStyle === style ? "true" : "false"}" data-i18n="${styleKeys[style]}">${escapeHtml(styleLabels[style])}</button>
             `).join("")}
           </div>
           <div class="review-actions">
-            <button id="reviewRedactButton" class="review-action review-action-redact" type="button" data-i18n="editor.reviewRedact">Redact</button>
-            <button id="reviewDismissButton" class="review-action" type="button" data-i18n="editor.reviewDismiss">Dismiss</button>
-            <button id="reviewKeepButton" class="review-action" type="button" data-i18n="editor.reviewKeep">Keep Visible</button>
+            <button id="reviewRedactButton" class="review-action review-action-redact" type="button" data-i18n="editor.reviewRedact">${escapeHtml(t("editor.reviewRedact"))}</button>
+            <button id="reviewDismissButton" class="review-action" type="button" data-i18n="editor.reviewDismiss">${escapeHtml(t("editor.reviewDismiss"))}</button>
+            <button id="reviewKeepButton" class="review-action" type="button" data-i18n="editor.reviewKeep">${escapeHtml(t("editor.reviewKeep"))}</button>
           </div>
         </article>
       </div>
@@ -7100,6 +7326,13 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSensitiveDataPanel();
     updateRegionStatus();
     showStatus(`${newRedactions.length} detected ${newRedactions.length === 1 ? "area" : "areas"} hidden.`);
+    if (editorState.reviewFinished) {
+      // Wait for mobile sheet collapse + padding to settle, then fit/center.
+      refitCanvasAfterSheetChange();
+      window.setTimeout(() => {
+        fitCanvasToViewport();
+      }, 120);
+    }
   }
 
   function applyAllDetectionsAsBlackout() {
@@ -7590,9 +7823,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const sidePanelWidth = reviewCoveredPanelWidth(canvasContainer, sidePanel);
-    const visibleWidth = Math.max(1, canvasContainer.clientWidth - sidePanelWidth);
-    const visibleHeight = Math.max(1, canvasContainer.clientHeight);
+    const insets = reviewCoveredPanelInsets(canvasContainer, sidePanel);
+    const visibleWidth = Math.max(1, canvasContainer.clientWidth - insets.width);
+    const visibleHeight = Math.max(1, canvasContainer.clientHeight - insets.height);
     const scaleX = visibleWidth / Math.max(canvas.width, 1);
     const scaleY = visibleHeight / Math.max(canvas.height, 1);
     const newZoom = Math.min(scaleX, scaleY) * 0.95;
@@ -8530,7 +8763,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const text = element.textContent.trim().toLowerCase();
       return [".png", ".jpg", ".jpeg", ".webp"].some((extension) => text.endsWith(extension));
     });
-    if (label) label.textContent = fileName;
+    if (label) {
+      label.textContent = fileName;
+      label.title = fileName;
+    }
+    const activeName = document.getElementById("activeFileName");
+    if (activeName) {
+      activeName.textContent = fileName;
+      activeName.title = fileName;
+    }
   }
 
   function showStatus(message, isError = false) {
