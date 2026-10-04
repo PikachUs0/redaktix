@@ -12,7 +12,7 @@ Redaktix (`package.json` name `redaktix`, app root `privacylab/`) is a browser-b
 - Draw: `editor.js` `paintEditorSurfaces` (blackout `fillRect`, `drawBlurRedaction`, `drawPixelateRedaction`). Export: `src/js/export-clean.js` `createCleanOutputCanvas` → `canvasToBlob` (fresh canvas; strips EXIF/XMP). Batch boxes: `src/js/app.js` `blackoutDetections`.
 - Tesseract: `tesseract.js` `createWorker` in `ocr.js`. `workerPath`, `corePath`, and `langPath` are same-origin `{BASE_URL}assets/ocr` (`public/assets/ocr`). Languages `eng`+`tur`. One worker. `public/sw.js` / stamped `dist/sw.js` precache OCR core, lang, and worker for offline editor use.
 - Runtime network: OCR assets are same-origin fetches; the screenshot is not uploaded. This is not zero-network. `public/sw.js` fetches same-origin GETs. `editor.js` `openDeviceImagePicker` fetches a device photo URI.
-- Analytics boundary: the redaction app (`editor.html`, OCR/detectors/tool pages) has **zero** analytics/telemetry/third-party origins. Marketing (`index.html` + `src/js/landing.js`) may use `src/js/marketing-analytics.js` — a cookieless, same-origin-only collect hook configured via `<meta name="redaktix-analytics-endpoint">` (empty = off). No gtag/GA/GTM anywhere.
+- Analytics boundary: the redaction app (`editor.html`, OCR/detectors/tool pages, `dist/editor.html`) has **zero** analytics/telemetry/third-party origins — including no `_vercel` / `va.vercel-scripts`. Marketing (`index.html` + `src/js/landing.js`) may use `src/js/marketing-analytics.js` (cookieless same-origin hook via `<meta name="redaktix-analytics-endpoint">`, empty = off) and the Vercel Web Analytics snippet (`/_vercel/insights/script.js`). No gtag/GA/GTM anywhere.
 
 ## 3. DETECTION RULES
 ### ALWAYS_ON (`detection-profiles.js` `ALWAYS_ON_DETECTORS`)
@@ -53,7 +53,7 @@ Important suites (not exhaustive):
 - `tests/private-key.test.js`, `tests/bearer-token.test.js`, `tests/connection-url.test.js`, `tests/env-secret.test.js`, `tests/passport.test.js`, `tests/seed-phrase.test.js`, `tests/pem-redis-coverage.test.js` — secret detectors.
 - `tests/cross-line.test.js`, `tests/cross-line-detectors.test.js`, `tests/seed-phrase-cross-line.test.js` — `buildCrossLineWindows`.
 - `tests/export-cleanliness.test.js` — clean export / no EXIF-XMP (needs `@napi-rs/canvas` in Node).
-- `tests/no-external-origins.test.js`, `tests/marketing-analytics-boundary.test.js` — app vs marketing analytics boundary; with `CI=1` these **fail** if `dist/` is missing.
+- `tests/no-external-origins.test.js`, `tests/marketing-analytics-boundary.test.js`, `tests/no-vercel-in-app.test.js` — app vs marketing analytics boundary (Vercel/`_vercel` landing-only); with `CI=1` these **fail** if `dist/` is missing.
 - `tests/no-debug-ocr-prod.test.js`, `tests/no-detection-console.test.js` — privacy; with `CI=1` fail if `dist/` missing.
 - `tests/service-worker.test.js` — SW stamp + OCR precache list.
 - `tests/ocr-adaptive.test.js`, `tests/ocr-badge-tckn.test.js`, `tests/i18n.test.js`, `tests/batch-queue.test.js`, `tests/review-*.test.js`, `tests/tool-pages.test.js`.
@@ -66,7 +66,7 @@ Hard test rule: do not import `ocr.js` / `loadOcrModule()` from unit tests. Do n
 ## 7. HARD RULES
 - Never loosen or remove a checksum validation (IBAN mod-97, TCKN, VKN, Luhn).
 - Never drop an ALWAYS_ON detector from tool pages or suppression.
-- Never add network requests, telemetry, or external CDNs to the redaction app. Marketing may only use the first-party same-origin hook in `marketing-analytics.js` (never GA/gtag/third-party).
+- Never add network requests, telemetry, or external CDNs to the redaction app. Marketing may use `marketing-analytics.js` and landing-only Vercel insights; never GA/gtag; never put `_vercel` / `va.vercel-scripts` in editor or tool pages.
 - Never delete or weaken a test to make it pass.
 - Do not modify files outside the task scope.
 - Do not touch `android/**` unless the task explicitly requires it.
