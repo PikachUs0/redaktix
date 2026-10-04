@@ -466,7 +466,17 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="material-symbols-outlined" aria-hidden="true">document_scanner</span>
               <span data-i18n="editor.scan">Scan sensitive data</span>
             </button>
-            <p class="editor-scan-always-on-note" data-i18n="editor.scanAlwaysOnNote">
+            <button
+              type="button"
+              class="editor-scan-note-toggle"
+              data-i18n-aria="editor.scanAlwaysOnNote"
+              data-i18n-title="editor.scanAlwaysOnNote"
+              aria-expanded="false"
+              aria-controls="editorScanAlwaysOnNote"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">info</span>
+            </button>
+            <p id="editorScanAlwaysOnNote" class="editor-scan-always-on-note" data-i18n="editor.scanAlwaysOnNote" hidden>
               Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned.
             </p>
           </div>
@@ -509,6 +519,16 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Canvas interface could not be created.");
       return;
     }
+
+    const scanNoteToggle = stage.querySelector(".editor-scan-note-toggle");
+    const scanNote = stage.querySelector("#editorScanAlwaysOnNote");
+    scanNoteToggle?.addEventListener("click", () => {
+      const open = scanNote?.hasAttribute("hidden") ?? true;
+      if (!scanNote) return;
+      if (open) scanNote.removeAttribute("hidden");
+      else scanNote.setAttribute("hidden", "");
+      scanNoteToggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
 
     canvas.tabIndex = 0;
     const imageWidth = image.naturalWidth || image.width;
@@ -6779,8 +6799,10 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       applyI18n(sensitiveDataPanel);
-      document.getElementById("reviewExportButton")?.addEventListener("click", () => {
-        document.getElementById("editorDownloadButton")?.click();
+      document.getElementById("reviewExportButton")?.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        openExportFromReview(event.currentTarget);
       });
       document.getElementById("customRulesButton")?.addEventListener("click", openCustomRulesDialog);
       return;
@@ -6788,21 +6810,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const reviewIndex = detections.length
       ? Math.min(Math.max(editorState.reviewIndex, 0), detections.length - 1)
       : -1;
+    const summaryText = detections.length
+      ? t(detections.length === 1 ? "editor.reviewSummaryOne" : "editor.reviewSummary", { n: detections.length })
+      : t("editor.suggest");
+    const countText = detections.length
+      ? t("editor.reviewPosition", { current: reviewIndex + 1, total: detections.length })
+      : getDetectionSummary(0);
     sensitiveDataPanel.innerHTML = `
       <div class="real-detection-panel-header">
         <div class="real-detection-panel-title">
           <span class="material-symbols-outlined real-detection-shield" aria-hidden="true">security</span>
           <h2 class="real-detection-panel-heading" data-i18n="${detections.length ? "editor.privacyReview" : "editor.sensitive"}">${detections.length ? "Privacy Review" : "Sensitive Data"}</h2>
+          <button id="reviewPanelCollapseButton" class="review-panel-collapse" type="button" aria-expanded="true" data-i18n-aria="editor.collapsePanel" data-i18n-title="editor.collapsePanel">
+            <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+          </button>
         </div>
         <div class="real-detection-panel-meta">
-          <span class="real-detection-count">${detections.length ? reviewPositionLabel(reviewIndex, detections.length) : getDetectionSummary(0)}</span>
+          <span class="real-detection-count">${escapeHtml(countText)}</span>
           <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
           <button id="hideAllDetectionsButton" class="real-hide-all-button" type="button" data-i18n="editor.hideAll" ${detections.length ? "" : "disabled"}>Hide all</button>
         </div>
       </div>
       <div class="real-detection-notice">
         <span class="material-symbols-outlined" aria-hidden="true">info</span>
-        <p data-i18n="${detections.length ? "" : "editor.suggest"}">${detections.length ? escapeHtml(reviewSummary(detections.length)) : "Redaktix suggests possible sensitive areas. Always review before sharing."}</p>
+        <p>${escapeHtml(summaryText)}</p>
       </div>
       <div class="real-detection-list">${detections.length ? createReviewStepMarkup(detections[reviewIndex], reviewIndex, detections.length) : createDetectionListMarkup(detections)}</div>
       <div class="real-detection-panel-footer">
@@ -6812,6 +6843,13 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
     applyI18n(sensitiveDataPanel);
 
+    document.getElementById("reviewPanelCollapseButton")?.addEventListener("click", () => {
+      const collapsed = sensitiveDataPanel.classList.toggle("is-collapsed");
+      const button = document.getElementById("reviewPanelCollapseButton");
+      button?.setAttribute("aria-expanded", collapsed ? "false" : "true");
+      const icon = button?.querySelector(".material-symbols-outlined");
+      if (icon) icon.textContent = collapsed ? "expand_less" : "expand_more";
+    });
     document.getElementById("reviewPreviousButton")?.addEventListener("click", () => {
       focusReviewDetection(stepReviewIndex(editorState.reviewIndex, editorState.detections.length, -1));
     });
@@ -6854,30 +6892,37 @@ document.addEventListener("DOMContentLoaded", () => {
     return `
       <div class="review-step">
         <div class="review-nav">
-          <button id="reviewPreviousButton" class="review-nav-button" type="button" ${navigationDisabled}>Previous</button>
-          <span class="review-position">${escapeHtml(reviewPositionLabel(index, count))}</span>
-          <button id="reviewNextButton" class="review-nav-button" type="button" ${navigationDisabled}>Next</button>
+          <button id="reviewPreviousButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewPrevious">Previous</button>
+          <span class="review-position">${escapeHtml(t("editor.reviewPosition", { current: index + 1, total: count }))}</span>
+          <button id="reviewNextButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewNext">Next</button>
         </div>
         <article class="real-detection-card review-active-card">
           <div class="real-detection-card-heading">
             <strong>${escapeHtml(title)}</strong>
-            <span class="real-confidence-badge" title="OCR confidence. This percentage does not prove the value is valid.">${confidence}%</span>
+            <span class="real-confidence-badge" data-i18n-title="editor.ocrConfidenceHint" title="${escapeHtml(t("editor.ocrConfidenceHint"))}">${confidence}%</span>
           </div>
           <code class="real-detection-text">${escapeHtml(detection.text)}</code>
-          ${warnings.map((warning) => `<p class="real-detection-warning">${escapeHtml(warning)}</p>`).join("")}
-          <div class="review-style" role="radiogroup" aria-label="Redaction style">
+          ${warnings.map((warning) => `<p class="real-detection-warning">${escapeHtml(localizeReviewWarning(warning))}</p>`).join("")}
+          <div class="review-style" role="radiogroup" data-i18n-aria="editor.redactionStyle" aria-label="${escapeHtml(t("editor.redactionStyle"))}">
             ${["blackout", "blur", "pixelate"].map((style) => `
-              <button type="button" class="review-style-option${editorState.redactionStyle === style ? " is-selected" : ""}" data-redaction-style="${style}" role="radio" aria-checked="${editorState.redactionStyle === style ? "true" : "false"}">${style === "blackout" ? "Blackout" : style === "blur" ? "Blur" : "Pixelate"}</button>
+              <button type="button" class="review-style-option${editorState.redactionStyle === style ? " is-selected" : ""}" data-redaction-style="${style}" role="radio" aria-checked="${editorState.redactionStyle === style ? "true" : "false"}" data-i18n="${style === "blackout" ? "label.blackout" : style === "blur" ? "editor.blur" : "editor.pixelate"}">${style === "blackout" ? "Blackout" : style === "blur" ? "Blur" : "Pixelate"}</button>
             `).join("")}
           </div>
           <div class="review-actions">
-            <button id="reviewRedactButton" class="review-action review-action-redact" type="button">Redact</button>
-            <button id="reviewDismissButton" class="review-action" type="button">Dismiss</button>
-            <button id="reviewKeepButton" class="review-action" type="button">Keep Visible</button>
+            <button id="reviewRedactButton" class="review-action review-action-redact" type="button" data-i18n="editor.reviewRedact">Redact</button>
+            <button id="reviewDismissButton" class="review-action" type="button" data-i18n="editor.reviewDismiss">Dismiss</button>
+            <button id="reviewKeepButton" class="review-action" type="button" data-i18n="editor.reviewKeep">Keep Visible</button>
           </div>
         </article>
       </div>
     `;
+  }
+
+  function localizeReviewWarning(warning) {
+    const text = String(warning || "");
+    if (/OCR confidence is low/i.test(text)) return t("editor.ocrConfidenceLow");
+    if (/OCR may have misread/i.test(text)) return t("editor.ocrMayMisread");
+    return text;
   }
 
   function getDetectionSummary(count) {
@@ -7263,6 +7308,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     menu.querySelector("#exportConfirmButton")?.addEventListener("click", async () => {
       menu.hidden = true;
+      delete menu.dataset.anchor;
       document.getElementById("editorDownloadButton")?.setAttribute("aria-expanded", "false");
       await downloadCleanImage();
     });
@@ -7270,11 +7316,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function toggleExportMenu(anchor) {
     const menu = document.getElementById("exportMenu");
-    if (!menu) return;
+    if (!menu || !anchor) return;
     const willOpen = menu.hidden;
     menu.hidden = !willOpen;
     anchor.setAttribute("aria-expanded", String(willOpen));
+    document.getElementById("editorDownloadButton")?.setAttribute("aria-expanded", String(willOpen));
     if (willOpen) positionAnchoredPanel(menu, anchor);
+  }
+
+  /** Review-complete "İndir" must not synthesize a header click (document click closes the menu). */
+  function openExportFromReview(anchor) {
+    ensureExportMenu();
+    const menu = document.getElementById("exportMenu");
+    const headerDownload = document.getElementById("editorDownloadButton");
+    if (!menu) {
+      downloadCleanImage();
+      return;
+    }
+    menu.hidden = false;
+    menu.dataset.anchor = "review";
+    headerDownload?.setAttribute("aria-expanded", "true");
+    positionAnchoredPanel(menu, anchor || headerDownload || document.body);
   }
 
   function selectExportFormat(format) {
@@ -8558,13 +8620,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const exportMenu = document.getElementById("exportMenu");
     const downloadButton = document.getElementById("editorDownloadButton");
+    const reviewExportButton = document.getElementById("reviewExportButton");
     if (
       exportMenu &&
       !exportMenu.hidden &&
       !exportMenu.contains(event.target) &&
-      !downloadButton?.contains(event.target)
+      !downloadButton?.contains(event.target) &&
+      !reviewExportButton?.contains(event.target)
     ) {
       exportMenu.hidden = true;
+      delete exportMenu.dataset.anchor;
       downloadButton?.setAttribute("aria-expanded", "false");
     }
   });
