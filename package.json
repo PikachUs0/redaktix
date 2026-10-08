@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build && node scripts/build-tools.js",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "node --test",
+    "start": "vite"
   },
   "devDependencies": {
     "@napi-rs/canvas": "^1.0.10",

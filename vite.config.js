@@ -38,7 +38,19 @@ function serviceWorkerPrecachePlugin() {
 }
 
 export default defineConfig({
+  // App is served from the project root in both dev and production.
+  // Do not set `base` to a subpath (e.g. /privacylab/) — that causes 404 at localhost:5173/.
+  base: "/",
   plugins: [toolPagesDevPlugin(), serviceWorkerPrecachePlugin()],
+  server: {
+    port: 5173,
+    strictPort: false,
+    open: "/",
+  },
+  preview: {
+    port: 4173,
+    strictPort: false,
+  },
   build: {
     manifest: true,
     rollupOptions: {

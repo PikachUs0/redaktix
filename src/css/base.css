@@ -228,19 +228,20 @@ pre {
 }
 
 .material-symbols-outlined {
-  font-family: "Material Symbols Outlined";
+  font-family: "Material Symbols Outlined" !important;
   font-size: 1.25rem;
   font-style: normal;
-  font-weight: normal;
+  font-weight: 400 !important;
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
-  font-feature-settings: "liga";
-  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga" 1;
+  -webkit-font-feature-settings: "liga" 1;
   -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
 .badge {
