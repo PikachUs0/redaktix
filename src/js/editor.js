@@ -91,6 +91,31 @@ import {
   detectStructuredDataFromLines as detectStructuredLines,
 } from "./structured-lines.js";
 import { suppressShadowedDetections } from "./detection-suppression.js";
+import pdfWorkerSrc from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
+import {
+  isPdfFile,
+  loadPdfDocument,
+  renderPdfPage,
+  extractPdfPageContent,
+  scanPdfDocumentPages,
+  aggregatePdfDetections,
+  configurePdfWorker,
+  getPdfWorkerSrc,
+  tagDetectionsWithPage,
+  PDF_DEFAULT_SCALE,
+} from "../lib/pdfEngine.js";
+import {
+  createRedactedPdfFileName,
+  exportRedactedPdf,
+  PDF_EXPORT_MODES,
+} from "../lib/pdfExport.js";
+
+try {
+  configurePdfWorker(pdfWorkerSrc);
+} catch (error) {
+  console.error("Redaktix PDF worker configuration failed:", error);
+}
+
 const FIXED_UI_SELECTOR = ".material-symbols-outlined, kbd, code";
 
 function markFixedUi(node) {
@@ -125,7 +150,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let ocrLinesById = new Map();
 
-  const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+  const allowedImageTypes = ["image/png", "image/jpeg", "image/webp"];
+  const allowedPdfTypes = ["application/pdf"];
+  const allowedTypes = [...allowedImageTypes, ...allowedPdfTypes];
   const maximumFileSize = 25 * 1024 * 1024;
 
   const editorState = {
@@ -134,6 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas: null,
     context: null,
     objectUrl: null,
+    pdfSession: null,
+    pdfTextResult: null,
     zoom: 1,
     minimumZoom: 0.25,
     maximumZoom: 3,
@@ -171,6 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
     compareSplit: 0.5,
     exportFormat: "png",
     exportQuality: 0.92,
+    pdfExportMode: PDF_EXPORT_MODES.FLATTEN,
+    isExportingPdf: false,
     pinchGesture: null,
     reviewActive: false,
     reviewFinished: false,
@@ -194,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const fileInput = document.createElement("input");
   fileInput.type = "file";
   fileInput.id = "imageFileInput";
-  fileInput.accept = allowedTypes.join(",");
+  fileInput.accept = [...allowedTypes, ".pdf"].join(",");
   fileInput.multiple = true;
   fileInput.hidden = true;
   document.body.appendChild(fileInput);
@@ -219,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <kbd translate="no">Ctrl + V</kbd>
       </div>
       <p id="selectedFileMessage" class="editor-selected-file" hidden></p>
-      <span class="editor-supported-formats">PNG, JPG and WebP</span>
+      <span class="editor-supported-formats">PNG, JPG, WebP and PDF</span>
       <div class="editor-local-message">
         <span class="material-symbols-outlined" translate="no" aria-hidden="true">lock</span>
         <span data-i18n="editor.stays">Your image stays on this device</span>
@@ -267,8 +298,14 @@ document.addEventListener("DOMContentLoaded", () => {
   fileInput.addEventListener("change", () => {
     const files = Array.from(fileInput.files || []);
     fileInput.value = "";
+    if (!files.length) return;
+    // Single PDF must always open the PDF pipeline (never the image batch path).
+    if (files.length === 1 && isPdfFile(files[0])) {
+      loadPdfFile(files[0]);
+      return;
+    }
     if (files.length > 1 || editorState.batchItems.length) acceptBatchFiles(files);
-    else if (files[0]) loadImageFile(files[0]);
+    else loadEditorFile(files[0]);
   });
 
 
@@ -355,13 +392,24 @@ document.addEventListener("DOMContentLoaded", () => {
       hideDropOverlay();
 
       const files = Array.from(event.dataTransfer?.files || []);
+      const pdfFile = files.find((file) => isPdfFile(file));
+      if (files.length === 1 && pdfFile) {
+        showStatus("Opening dropped PDF...");
+        loadPdfFile(pdfFile);
+        return;
+      }
       if (files.length > 1 || editorState.batchItems.length) {
         acceptBatchFiles(files);
         return;
       }
-      const imageFile = files.find((file) => allowedTypes.includes(file.type));
+      if (pdfFile) {
+        showStatus("Opening dropped PDF...");
+        loadPdfFile(pdfFile);
+        return;
+      }
+      const imageFile = files.find((file) => allowedImageTypes.includes(file.type));
       if (!imageFile) {
-        showStatus("Please drop a PNG, JPG or WebP image.", true);
+        showStatus("Please drop a PNG, JPG, WebP, or PDF file.", true);
         return;
       }
 
@@ -370,10 +418,882 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function loadEditorFile(file) {
+    if (isPdfFile(file)) {
+      loadPdfFile(file);
+      return;
+    }
+    loadImageFile(file);
+  }
+
+  async function destroyPdfSession() {
+    const session = editorState.pdfSession;
+    session?.scanController?.abort?.();
+    editorState.pdfSession = null;
+    editorState.pdfTextResult = null;
+    setPdfScanProgress({ visible: false });
+    if (!session) return;
+    for (const entry of session.pageCache?.values?.() || []) {
+      releasePdfCanvasBitmap(entry);
+    }
+    try {
+      if (typeof session.document?.destroy === "function") {
+        await session.document.destroy();
+      } else {
+        session.document?.cleanup?.();
+      }
+    } catch {
+      // Document may already be destroyed.
+    }
+  }
+
+  function releasePdfCanvasBitmap(entry) {
+    if (!entry?.canvas) return;
+    try {
+      entry.canvas.width = 0;
+      entry.canvas.height = 0;
+    } catch {
+      // ignore
+    }
+    entry.canvas = null;
+  }
+
+  function resetEditorDocumentState() {
+    editorState.file = null;
+    editorState.redactions = [];
+    editorState.detections = [];
+    editorState.reviewFinished = false;
+    stopReviewSession();
+    editorState.zoom = 1;
+    editorState.zoomMode = "fit";
+    editorState.compareMode = false;
+    editorState.compareSplit = 0.5;
+    editorState.pinchGesture = null;
+    activePointers.clear();
+    editorState.selectedRedactionId = null;
+    editorState.selectionInteraction = null;
+    editorState.selectionResizeHandle = null;
+    editorState.selectionOriginalWidth = 0;
+    editorState.selectionOriginalHeight = 0;
+    editorState.selectionHasMoved = false;
+    editorState.isAdjustingRegionStrength = false;
+    editorState.regionStrengthOriginalValue = null;
+    editorState.scanRequestId += 1;
+    editorState.isScanning = false;
+    resetHistory();
+    renderSensitiveDataPanel();
+  }
+
+  async function loadPdfFile(file) {
+    if (!isPdfFile(file)) {
+      showFileError("Please choose a PNG, JPG, WebP, or PDF file.");
+      return;
+    }
+    if (file.size > maximumFileSize) {
+      showFileError("The selected PDF must be smaller than 25 MB.");
+      return;
+    }
+
+    clearPreviousObjectUrl();
+    await destroyPdfSession();
+
+    selectedFileMessage.hidden = false;
+    selectedFileMessage.classList.remove("is-error");
+    selectedFileMessage.textContent = "Loading PDF...";
+
+    try {
+      try {
+        configurePdfWorker(pdfWorkerSrc || getPdfWorkerSrc());
+      } catch (workerError) {
+        console.error("Redaktix PDF worker setup failed:", workerError);
+        throw new Error("PDF engine worker failed to initialize. Reload the page and try again.");
+      }
+
+      const data = await file.arrayBuffer();
+      if (!data?.byteLength) {
+        throw new Error("The PDF file appears to be empty.");
+      }
+
+      const documentProxy = await loadPdfDocument(data);
+      editorState.pdfSession = {
+        document: documentProxy,
+        file,
+        pageCount: Number(documentProxy.numPages) || 1,
+        currentPage: 1,
+        scale: PDF_DEFAULT_SCALE,
+        pageCache: new Map(),
+        scanController: null,
+        fullScanId: 0,
+        fullScanRunning: false,
+        fullScanPage: 0,
+        autoScanScheduled: false,
+        usedOcrFallback: false,
+      };
+      editorState.sourceName = file.name;
+      editorState.objectUrl = null;
+      resetEditorDocumentState();
+
+      // Present page 1 first so editorState.image exists (panel + canvas share the image path).
+      // pdf.js ops are serialized in pdfEngine — still avoid overlapping present + scan in the UI layer.
+      try {
+        await presentPdfPage(1, { rebuildStage: true, autoScan: false });
+      } catch (previewError) {
+        console.error("Redaktix PDF page preview failed:", previewError);
+        showStatus(t("editor.pdfPreviewFailed"), true);
+      }
+
+      if (selectedFileMessage) {
+        selectedFileMessage.hidden = true;
+        selectedFileMessage.textContent = "";
+      }
+
+      // Single auto-start (same path as "Hassas veriyi tara") — never double-trigger.
+      schedulePdfAutoScan();
+    } catch (error) {
+      console.error("Redaktix PDF load failed:", error);
+      await destroyPdfSession();
+      const detail = String(error?.message || error || "");
+      showFileError(
+        /worker/i.test(detail)
+          ? "PDF engine failed to start. Reload the page and try again."
+          : "The selected PDF could not be opened."
+      );
+      setPdfScanProgress({ visible: true, error: true });
+      window.setTimeout(() => setPdfScanProgress({ visible: false }), 4200);
+    }
+  }
+
+  function getPdfPageCacheEntry(pageNumber) {
+    const session = editorState.pdfSession;
+    if (!session) return null;
+    const page = Math.max(1, Math.min(session.pageCount, Number(pageNumber) || 1));
+    if (!session.pageCache.has(page)) {
+      session.pageCache.set(page, {
+        canvas: null,
+        canvasWidth: 0,
+        canvasHeight: 0,
+        words: [],
+        lines: [],
+        text: "",
+        detections: [],
+        redactions: [],
+        scanned: false,
+      });
+    }
+    return session.pageCache.get(page);
+  }
+
+  async function ensurePdfPageText(pageNumber) {
+    const session = editorState.pdfSession;
+    if (!session?.document) throw new Error("No PDF is loaded.");
+    const page = Math.max(1, Math.min(session.pageCount, Number(pageNumber) || 1));
+    const entry = getPdfPageCacheEntry(page);
+    if (entry.words?.length || entry.scanned || entry.text) {
+      return entry;
+    }
+    const content = await extractPdfPageContent(session.document, page, { scale: session.scale });
+    entry.words = content.words;
+    entry.lines = content.lines;
+    entry.text = content.text;
+    entry.canvasWidth = content.canvasWidth;
+    entry.canvasHeight = content.canvasHeight;
+    return entry;
+  }
+
+  async function ensurePdfPageCanvas(pageNumber) {
+    const session = editorState.pdfSession;
+    if (!session?.document) throw new Error("No PDF is loaded.");
+    const page = Math.max(1, Math.min(session.pageCount, Number(pageNumber) || 1));
+    const entry = getPdfPageCacheEntry(page);
+    if (entry.canvas && entry.canvas.width > 0 && entry.canvas.height > 0) {
+      return entry;
+    }
+    const rendered = await renderPdfPage(session.document, page, {
+      scale: session.scale,
+      skipText: Boolean(entry.words?.length),
+      words: entry.words,
+      lines: entry.lines,
+      text: entry.text,
+    });
+    entry.canvas = rendered.canvas;
+    entry.canvasWidth = rendered.canvas.width;
+    entry.canvasHeight = rendered.canvas.height;
+    if (!entry.words?.length) {
+      entry.words = rendered.words;
+      entry.lines = rendered.lines;
+      entry.text = rendered.text;
+    }
+    return entry;
+  }
+
+  async function ensurePdfPageData(pageNumber, { needCanvas = true } = {}) {
+    if (needCanvas) return ensurePdfPageCanvas(pageNumber);
+    return ensurePdfPageText(pageNumber);
+  }
+
+  function collectAllPdfDetections() {
+    const session = editorState.pdfSession;
+    if (!session) return [];
+    const pages = [];
+    for (let page = 1; page <= session.pageCount; page += 1) {
+      const entry = session.pageCache.get(page);
+      pages.push({
+        pageNumber: page,
+        detections: Array.isArray(entry?.detections) ? entry.detections : [],
+      });
+    }
+    return aggregatePdfDetections(pages);
+  }
+
+  function normalizeDetectionPageFields(detection) {
+    const copy = cloneDetectionForHistory(detection);
+    if (!copy || typeof copy !== "object") return copy;
+    const page = Number(copy.page || copy.pageNumber || 0);
+    if (page > 0) {
+      copy.page = page;
+      copy.pageNumber = page;
+    }
+    return copy;
+  }
+
+  /**
+   * Shared image + PDF completion path: write findings into editorState.detections
+   * and refresh the Hassas Veri / Sensitive Data panel (same UI as image OCR).
+   * @param {object[]} detections
+   * @param {{ focusFirst?: boolean, updateCanvas?: boolean, statusLabel?: string | null }} [options]
+   * @returns {number} detection count
+   */
+  function publishScanDetections(detections, options = {}) {
+    const list = (Array.isArray(detections) ? detections : []).map(normalizeDetectionPageFields);
+    editorState.detections = list;
+    editorState.reviewFinished = false;
+
+    const total = list.length;
+    if (options.statusLabel != null) {
+      updateActiveToolStatus(options.statusLabel);
+    } else if (total) {
+      const label = total === 1 ? "potential item" : "potential items";
+      updateActiveToolStatus(
+        editorState.pdfSession
+          ? `${total} ${label} found across ${editorState.pdfSession.pageCount} page${editorState.pdfSession.pageCount === 1 ? "" : "s"}`
+          : `${total} ${label} found · Review highlighted areas`
+      );
+    }
+
+    if (options.focusFirst && total) {
+      focusReviewDetection(0);
+    } else {
+      renderSensitiveDataPanel();
+      if (options.updateCanvas !== false) renderCanvas();
+    }
+    return total;
+  }
+
+  function syncDocumentDetectionsToEditor(options = {}) {
+    if (!editorState.pdfSession) return 0;
+    return publishScanDetections(collectAllPdfDetections(), {
+      focusFirst: Boolean(options.focusFirst),
+      updateCanvas: options.updateCanvas !== false,
+      statusLabel: options.statusLabel,
+    });
+  }
+
+  function detectionsForCurrentPdfPage() {
+    const session = editorState.pdfSession;
+    if (!session) return editorState.detections;
+    const page = session.currentPage;
+    return editorState.detections.filter((detection) => Number(detection.page || page) === page);
+  }
+
+  function pdfPagePixelSize(pageNumber) {
+    const session = editorState.pdfSession;
+    const entry = session?.pageCache?.get(pageNumber);
+    const width = Number(entry?.canvasWidth || entry?.canvas?.width || 0);
+    const height = Number(entry?.canvasHeight || entry?.canvas?.height || 0);
+    if (width > 0 && height > 0) return { width, height };
+    if (pageNumber === session?.currentPage && editorState.canvas) {
+      return { width: editorState.canvas.width, height: editorState.canvas.height };
+    }
+    return { width: editorState.imageWidth || 0, height: editorState.imageHeight || 0 };
+  }
+
+  function cacheActivePdfPageEdits() {
+    const session = editorState.pdfSession;
+    if (!session || !editorState.image) return;
+    const page = session.currentPage;
+    const existing = getPdfPageCacheEntry(page);
+    const pageDetections = editorState.detections
+      .filter((detection) => Number(detection.page || page) === page)
+      .map(cloneDetectionForHistory);
+    existing.canvas = editorState.image;
+    existing.canvasWidth = editorState.image.width || existing.canvasWidth;
+    existing.canvasHeight = editorState.image.height || existing.canvasHeight;
+    existing.words = existing.words?.length ? existing.words : (editorState.pdfTextResult?.words || []);
+    existing.lines = existing.lines?.length ? existing.lines : (editorState.pdfTextResult?.lines || []);
+    existing.text = existing.text || editorState.pdfTextResult?.text || "";
+    // Merge — never wipe per-page findings when the global list is temporarily empty.
+    if (pageDetections.length) {
+      existing.detections = pageDetections;
+    } else if (!Array.isArray(existing.detections)) {
+      existing.detections = [];
+    }
+    existing.redactions = editorState.redactions.map((redaction) => ({ ...redaction }));
+    existing.scanned = true;
+  }
+
+  function setPdfScanProgress({ visible, page = 0, pageCount = 0, error = false }) {
+    const badge = document.getElementById("pdfScanProgress");
+    if (!badge) return;
+    badge.hidden = !visible;
+    badge.classList.toggle("is-error", Boolean(error));
+    badge.setAttribute("aria-busy", visible && !error ? "true" : "false");
+    const label = document.getElementById("pdfScanProgressLabel");
+    if (label) {
+      if (error) label.textContent = t("editor.pdfScanFailed");
+      else if (visible && pageCount > 0) label.textContent = t("editor.pdfScanProgress", { page, pageCount });
+      else label.textContent = t("editor.pdfScanPreparing");
+    }
+  }
+
+  function failPdfDocumentScan(error) {
+    console.error("Redaktix PDF document scan failed:", error);
+    updateActiveToolStatus("Text scan unavailable · Manual tools still work");
+    showStatus("Automatic PDF text detection could not be completed.", true);
+    setPdfScanProgress({ visible: true, error: true });
+    window.setTimeout(() => setPdfScanProgress({ visible: false }), 4200);
+  }
+
+  /**
+   * Invoke the same sensitive-data scan path as the "Hassas veriyi tara" button.
+   * Safe to call multiple times — no-ops while a scan is already running.
+   */
+  function triggerPdfSensitiveDataScan() {
+    const session = editorState.pdfSession;
+    if (!session?.document) return false;
+    if (editorState.isScanning || session.fullScanRunning) return false;
+    const scanButton = document.getElementById("scanSensitiveDataButton");
+    if (scanButton) {
+      void scanImageForSensitiveData(scanButton).catch((error) => {
+        console.error("Redaktix PDF scan action rejected:", error);
+        failPdfDocumentScan(error);
+      });
+      return true;
+    }
+    void startPdfFullDocumentScan().catch((error) => {
+      console.error("Redaktix PDF background scan rejected:", error);
+      failPdfDocumentScan(error);
+    });
+    return true;
+  }
+
+  function schedulePdfAutoScan() {
+    const session = editorState.pdfSession;
+    if (!session?.document) return;
+    if (session.autoScanScheduled) return;
+    session.autoScanScheduled = true;
+    const run = () => {
+      try {
+        if (!triggerPdfSensitiveDataScan()) {
+          // Stage may not have the button yet — retry once on the next frame.
+          if (typeof window.requestAnimationFrame === "function") {
+            window.requestAnimationFrame(() => {
+              try {
+                triggerPdfSensitiveDataScan();
+              } catch (error) {
+                console.error("Redaktix PDF auto-scan retry failed:", error);
+                failPdfDocumentScan(error);
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Redaktix PDF auto-scan failed to start:", error);
+        failPdfDocumentScan(error);
+      }
+    };
+    // Wait until the canvas stage + scan button are in the DOM and painted.
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => window.requestAnimationFrame(run));
+    } else {
+      window.setTimeout(run, 0);
+    }
+  }
+
+  function isActivePdfScan(session, scanId, requestId) {
+    return Boolean(
+      session &&
+      editorState.pdfSession === session &&
+      session.fullScanId === scanId &&
+      editorState.scanRequestId === requestId
+    );
+  }
+
+  function publishPdfScanProgressUi(page, pageCount, buttonLabel) {
+    const aggregate = collectAllPdfDetections();
+    const found = aggregate.length;
+    const label = found === 1 ? "potential item" : "potential items";
+    publishScanDetections(aggregate, {
+      focusFirst: false,
+      updateCanvas: page === editorState.pdfSession?.currentPage,
+      statusLabel: found
+        ? `${found} ${label} · Scanning page ${page} of ${pageCount}`
+        : t("editor.pdfScanProgress", { page, pageCount }),
+    });
+    if (buttonLabel) {
+      buttonLabel.removeAttribute("data-i18n");
+      buttonLabel.textContent = t("editor.pdfScanProgress", { page, pageCount });
+    }
+  }
+
+  /**
+   * When a PDF page has no extractable text layer, OCR the rendered canvas (same path as images).
+   */
+  async function ocrFallbackPdfPage(pageNumber, { signal, buttonLabel } = {}) {
+    if (signal?.aborted) return [];
+    const entry = await ensurePdfPageCanvas(pageNumber);
+    if (signal?.aborted) return [];
+    const canvas = entry.canvas;
+    if (!canvas || canvas.width < 2 || canvas.height < 2) return [];
+
+    const previousPdfText = editorState.pdfTextResult;
+    try {
+      const detections = await detectImageCanvas(
+        canvas,
+        (message) => updateOcrProgress(message, buttonLabel),
+        { forceOcr: true }
+      );
+      if (editorState.pdfTextResult?.words?.length) {
+        entry.words = editorState.pdfTextResult.words;
+        entry.lines = editorState.pdfTextResult.lines || [];
+        entry.text = editorState.pdfTextResult.text || "";
+      }
+      const tagged = tagDetectionsWithPage(detections, pageNumber).map(normalizeDetectionPageFields);
+      entry.detections = tagged;
+      entry.scanned = true;
+      if (pageNumber === editorState.pdfSession?.currentPage) {
+        editorState.pdfTextResult = {
+          words: entry.words || [],
+          lines: entry.lines || [],
+          text: entry.text || "",
+        };
+      } else {
+        editorState.pdfTextResult = previousPdfText;
+      }
+      return tagged;
+    } catch (error) {
+      editorState.pdfTextResult = previousPdfText;
+      throw error;
+    }
+  }
+
+  async function runPdfOcrFallbackForEmptyPages(session, { scanId, requestId, signal, buttonLabel }) {
+    const emptyPages = [];
+    for (let page = 1; page <= session.pageCount; page += 1) {
+      const entry = session.pageCache.get(page);
+      const hasText = Boolean(
+        String(entry?.text || "").trim() ||
+        entry?.words?.length ||
+        entry?.lines?.length
+      );
+      if (!hasText) emptyPages.push(page);
+    }
+    if (!emptyPages.length) return { ran: false, pageFailures: 0 };
+
+    session.usedOcrFallback = true;
+    let pageFailures = 0;
+    showStatus(t("editor.pdfOcrFallback"));
+    for (let index = 0; index < emptyPages.length; index += 1) {
+      if (signal?.aborted || !isActivePdfScan(session, scanId, requestId)) break;
+      const page = emptyPages[index];
+      session.fullScanPage = page;
+      setPdfScanProgress({ visible: true, page, pageCount: session.pageCount });
+      try {
+        await ocrFallbackPdfPage(page, { signal, buttonLabel });
+      } catch (error) {
+        pageFailures += 1;
+        console.error(`Redaktix PDF OCR fallback failed on page ${page}:`, error);
+      }
+      if (!isActivePdfScan(session, scanId, requestId)) {
+        console.warn("Redaktix PDF OCR fallback progress dropped — scan superseded.");
+        break;
+      }
+      publishPdfScanProgressUi(page, session.pageCount, buttonLabel);
+    }
+    return { ran: true, pageFailures };
+  }
+
+  async function startPdfFullDocumentScan() {
+    const session = editorState.pdfSession;
+    if (!session?.document) {
+      throw new Error("No PDF document is loaded for scanning.");
+    }
+
+    session.scanController?.abort?.();
+    const controller = typeof AbortController === "function" ? new AbortController() : null;
+    session.scanController = controller;
+    session.fullScanId += 1;
+    const scanId = session.fullScanId;
+    session.fullScanRunning = true;
+    session.fullScanPage = 0;
+    session.usedOcrFallback = false;
+    editorState.isScanning = true;
+    editorState.scanRequestId += 1;
+    const requestId = editorState.scanRequestId;
+    setPdfScanProgress({ visible: true, page: 0, pageCount: session.pageCount });
+
+    const scanButton = document.getElementById("scanSensitiveDataButton");
+    const buttonLabel = scanButton?.querySelector("span:last-child");
+    if (scanButton) {
+      scanButton.disabled = true;
+      scanButton.classList.add("is-scanning");
+    }
+
+    let pageFailures = 0;
+    let scanAborted = false;
+
+    try {
+      const textScan = await scanPdfDocumentPages(session.document, {
+        scale: session.scale,
+        signal: controller?.signal,
+        detectFn: (ocrResult) => buildDetectionsFromOcr(ocrResult, {
+          imageWidth: Number(ocrResult?.canvasWidth) || 0,
+          imageHeight: Number(ocrResult?.canvasHeight) || 0,
+        }),
+        onPageError: (error, pageNumber, phase) => {
+          pageFailures += 1;
+          console.error(`Redaktix PDF ${phase} failed on page ${pageNumber}:`, error);
+        },
+        onProgress: ({ page, pageCount, pageResult, detections }) => {
+          if (!isActivePdfScan(session, scanId, requestId)) {
+            console.warn("Redaktix PDF scan progress dropped — scan superseded.", { page, scanId, requestId });
+            return;
+          }
+          session.fullScanPage = page;
+          setPdfScanProgress({ visible: true, page, pageCount });
+
+          const entry = getPdfPageCacheEntry(page);
+          entry.words = pageResult.words || [];
+          entry.lines = pageResult.lines || [];
+          entry.text = pageResult.text || "";
+          entry.canvasWidth = pageResult.canvasWidth || entry.canvasWidth;
+          entry.canvasHeight = pageResult.canvasHeight || entry.canvasHeight;
+          entry.detections = (pageResult.detections || []).map(normalizeDetectionPageFields);
+          entry.scanned = true;
+
+          if (page === session.currentPage) {
+            editorState.pdfTextResult = {
+              words: entry.words,
+              lines: entry.lines,
+              text: entry.text,
+            };
+          }
+
+          const aggregate = Array.isArray(detections) ? detections : collectAllPdfDetections();
+          const found = aggregate.length;
+          const label = found === 1 ? "potential item" : "potential items";
+          publishScanDetections(aggregate, {
+            focusFirst: false,
+            updateCanvas: page === session.currentPage,
+            statusLabel: found
+              ? `${found} ${label} · Scanning page ${page} of ${pageCount}`
+              : t("editor.pdfScanProgress", { page, pageCount }),
+          });
+          if (buttonLabel) {
+            buttonLabel.removeAttribute("data-i18n");
+            buttonLabel.textContent = t("editor.pdfScanProgress", { page, pageCount });
+          }
+        },
+      });
+
+      scanAborted = Boolean(textScan?.aborted || controller?.signal?.aborted);
+
+      if (!isActivePdfScan(session, scanId, requestId)) {
+        console.warn("Redaktix PDF scan superseded before completion publish.");
+        return;
+      }
+
+      if (scanAborted) {
+        showStatus(t("editor.pdfScanAborted"), true);
+        return;
+      }
+
+      // Scanned / image-only PDFs: text layer empty → OCR page bitmaps like image uploads.
+      const ocrFallback = await runPdfOcrFallbackForEmptyPages(session, {
+        scanId,
+        requestId,
+        signal: controller?.signal,
+        buttonLabel,
+      });
+      pageFailures += ocrFallback.pageFailures || 0;
+
+      if (!isActivePdfScan(session, scanId, requestId)) {
+        console.warn("Redaktix PDF scan superseded after OCR fallback.");
+        return;
+      }
+
+      if (controller?.signal?.aborted) {
+        showStatus(t("editor.pdfScanAborted"), true);
+        return;
+      }
+
+      const total = publishScanDetections(collectAllPdfDetections(), {
+        focusFirst: true,
+        updateCanvas: true,
+      });
+      if (!total) {
+        stopReviewSession();
+        renderSensitiveDataPanel();
+        renderCanvas();
+        updateActiveToolStatus(
+          session.usedOcrFallback
+            ? t("editor.pdfScanEmptyAfterOcr")
+            : "Text scan complete · No supported sensitive data found"
+        );
+      }
+      const label = total === 1 ? "potential item" : "potential items";
+      showStatus(
+        total
+          ? `${total} ${label} found across the PDF.`
+          : pageFailures
+            ? "PDF scan finished with page errors. Some pages could not be analyzed."
+            : session.usedOcrFallback
+              ? t("editor.pdfScanEmptyAfterOcr")
+              : "Text scan complete. No supported sensitive data was found.",
+        Boolean(pageFailures && !total)
+      );
+      if (pageFailures && !total) {
+        setPdfScanProgress({ visible: true, error: true });
+        window.setTimeout(() => {
+          if (isActivePdfScan(session, scanId, requestId)) setPdfScanProgress({ visible: false });
+        }, 4200);
+      }
+    } catch (error) {
+      if (controller?.signal?.aborted) {
+        if (isActivePdfScan(session, scanId, requestId)) {
+          showStatus(t("editor.pdfScanAborted"), true);
+        }
+        return;
+      }
+      if (!isActivePdfScan(session, scanId, requestId)) {
+        console.warn("Redaktix PDF scan error ignored — scan superseded.", error);
+        return;
+      }
+      failPdfDocumentScan(error);
+    } finally {
+      // Only clear UI for the active session/scan — avoid racing a newer upload.
+      const stillActiveSession = editorState.pdfSession === session && session.fullScanId === scanId;
+      if (stillActiveSession) {
+        session.fullScanRunning = false;
+        session.scanController = null;
+        const badge = document.getElementById("pdfScanProgress");
+        if (badge && !badge.classList.contains("is-error")) {
+          setPdfScanProgress({ visible: false });
+        }
+      }
+      if (requestId === editorState.scanRequestId) {
+        editorState.isScanning = false;
+        if (scanButton) {
+          scanButton.disabled = false;
+          scanButton.classList.remove("is-scanning");
+        }
+        if (buttonLabel) {
+          buttonLabel.setAttribute("data-i18n", "editor.scan");
+          buttonLabel.textContent = t("editor.scan");
+        }
+      }
+    }
+  }
+
+  async function presentPdfPage(pageNumber, { rebuildStage = false, autoScan = false } = {}) {
+    const session = editorState.pdfSession;
+    if (!session) return;
+
+    const page = Math.max(1, Math.min(session.pageCount, Number(pageNumber) || 1));
+    const previousPage = session.currentPage;
+    if (previousPage !== page) {
+      cacheActivePdfPageEdits();
+      // Drop the previous page bitmap; keep text/detections/redactions only.
+      const previousEntry = session.pageCache.get(previousPage);
+      if (previousEntry) releasePdfCanvasBitmap(previousEntry);
+    }
+
+    const pageData = await ensurePdfPageCanvas(page);
+    session.currentPage = page;
+    editorState.image = pageData.canvas;
+    editorState.imageWidth = pageData.canvas.width;
+    editorState.imageHeight = pageData.canvas.height;
+    editorState.file = session.file;
+    editorState.pdfTextResult = {
+      words: pageData.words,
+      lines: pageData.lines,
+      text: pageData.text,
+    };
+
+    editorState.redactions = (pageData.redactions || []).map((redaction) => ({ ...redaction }));
+    syncDocumentDetectionsToEditor();
+    editorState.reviewFinished = false;
+
+    if (rebuildStage || !document.getElementById("editorCanvasStage")) {
+      showCanvas(pageData.canvas, session.file, {
+        isPdf: true,
+        pdfPage: page,
+        pdfPageCount: session.pageCount,
+        // PDF full-document scan is started via schedulePdfAutoScan / triggerPdfSensitiveDataScan
+        // so the sidebar fills as pages complete. Avoid a competing per-showCanvas image OCR pass.
+        skipAutoScan: true,
+      });
+      if (autoScan) schedulePdfAutoScan();
+      else {
+        renderSensitiveDataPanel();
+        renderCanvas();
+      }
+    } else {
+      applyLoadedImageToExistingStage(pageData.canvas, session.file, {
+        isPdf: true,
+        pdfPage: page,
+        pdfPageCount: session.pageCount,
+      });
+      if (autoScan) schedulePdfAutoScan();
+      else {
+        renderSensitiveDataPanel();
+        renderCanvas();
+      }
+    }
+  }
+
+  async function goToPdfPage(pageNumber, options = {}) {
+    const session = editorState.pdfSession;
+    if (!session) return;
+    const page = Math.max(1, Math.min(session.pageCount, Number(pageNumber) || 1));
+    if (page === session.currentPage && editorState.image) return;
+    await presentPdfPage(page, {
+      rebuildStage: false,
+      autoScan: Boolean(options.autoScan),
+    });
+  }
+
+  function applyLoadedImageToExistingStage(image, file, options = {}) {
+    const canvas = editorState.canvas;
+    const overlay = editorState.overlay;
+    if (!canvas || !editorState.context) {
+      showCanvas(image, file, options);
+      return;
+    }
+
+    const imageWidth = image.naturalWidth || image.width;
+    const imageHeight = image.naturalHeight || image.height;
+    canvas.width = imageWidth;
+    canvas.height = imageHeight;
+    if (overlay) {
+      overlay.width = canvas.width;
+      overlay.height = canvas.height;
+    }
+    editorState.image = image;
+    editorState.imageWidth = imageWidth;
+    editorState.imageHeight = imageHeight;
+    editorState.file = file;
+    editorState.zoom = 1;
+    editorState.zoomMode = "fit";
+    editorState.compareMode = false;
+    editorState.selectedRedactionId = null;
+
+    const fileNameLabel = document.getElementById("activeFileName");
+    if (fileNameLabel) {
+      fileNameLabel.textContent = file.name;
+      fileNameLabel.title = file.name;
+    }
+    const dimensionsLabel = document.getElementById("activeImageDimensions");
+    if (dimensionsLabel) {
+      const pageNote = options.isPdf && options.pdfPageCount
+        ? ` · Page ${options.pdfPage} / ${options.pdfPageCount}`
+        : "";
+      dimensionsLabel.textContent = `${imageWidth} × ${imageHeight} px${pageNote}`;
+      dimensionsLabel.title = dimensionsLabel.textContent;
+    }
+
+    updatePdfPageNav(options);
+    updateHeaderFileName(file.name);
+    resetHistory();
+    saveHistory();
+    renderCanvas();
+    updateCanvasCursor();
+    window.requestAnimationFrame(() => {
+      fitCanvasToViewport();
+      syncUnifiedMobileToolbar();
+    });
+  }
+
+  function updatePdfPageNav(options = {}) {
+    const nav = document.getElementById("pdfPageNav");
+    if (!nav) return;
+    const session = editorState.pdfSession;
+    const pageCount = Number(options.pdfPageCount || session?.pageCount || 0);
+    const page = Number(options.pdfPage || session?.currentPage || 1);
+    const isPdf = Boolean(options.isPdf || session);
+    nav.hidden = !isPdf || pageCount < 1;
+    if (nav.hidden) return;
+
+    const label = document.getElementById("pdfPageLabel");
+    if (label) label.textContent = `Page ${page} of ${pageCount}`;
+
+    const select = document.getElementById("pdfPageSelect");
+    if (select) {
+      if (select.options.length !== pageCount) {
+        select.innerHTML = Array.from({ length: pageCount }, (_, index) => {
+          const value = index + 1;
+          return `<option value="${value}">${value}</option>`;
+        }).join("");
+      }
+      select.value = String(page);
+    }
+
+    const prev = document.getElementById("pdfPrevPage");
+    const next = document.getElementById("pdfNextPage");
+    if (prev) prev.disabled = page <= 1;
+    if (next) next.disabled = page >= pageCount;
+
+    const strip = document.getElementById("pdfPageStrip");
+    if (strip) {
+      strip.innerHTML = Array.from({ length: pageCount }, (_, index) => {
+        const value = index + 1;
+        const active = value === page ? " is-active" : "";
+        return `<button type="button" class="editor-pdf-page-thumb${active}" data-pdf-page="${value}" aria-label="Page ${value}" aria-current="${value === page ? "page" : "false"}">${value}</button>`;
+      }).join("");
+      strip.querySelectorAll("[data-pdf-page]").forEach((button) => {
+        button.addEventListener("click", () => {
+          void goToPdfPage(Number(button.dataset.pdfPage));
+        });
+      });
+    }
+  }
+
+  function bindPdfPageNav(stage) {
+    const prev = stage.querySelector("#pdfPrevPage");
+    const next = stage.querySelector("#pdfNextPage");
+    const select = stage.querySelector("#pdfPageSelect");
+    prev?.addEventListener("click", () => {
+      const session = editorState.pdfSession;
+      if (!session) return;
+      void goToPdfPage(session.currentPage - 1);
+    });
+    next?.addEventListener("click", () => {
+      const session = editorState.pdfSession;
+      if (!session) return;
+      void goToPdfPage(session.currentPage + 1);
+    });
+    select?.addEventListener("change", () => {
+      void goToPdfPage(Number(select.value));
+    });
+  }
+
   function loadImageFile(file) {
     loadOcrModule().catch(() => {});
-    if (!allowedTypes.includes(file.type)) {
-      showFileError("Please choose a PNG, JPG or WebP image.");
+    if (isPdfFile(file)) {
+      loadPdfFile(file);
+      return;
+    }
+    if (!allowedImageTypes.includes(file.type)) {
+      showFileError("Please choose a PNG, JPG, WebP, or PDF file.");
       return;
     }
     if (file.size > maximumFileSize) {
@@ -382,6 +1302,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     clearPreviousObjectUrl();
+    void destroyPdfSession();
     const objectUrl = URL.createObjectURL(file);
     const image = new Image();
 
@@ -406,33 +1327,10 @@ document.addEventListener("DOMContentLoaded", () => {
       editorState.file = null;
       editorState.image = sourceCanvas;
       editorState.objectUrl = null;
+      editorState.pdfTextResult = null;
       URL.revokeObjectURL(objectUrl);
       image.src = "";
-      editorState.redactions = [];
-      editorState.detections = [];
-      editorState.reviewFinished = false;
-      stopReviewSession();
-      editorState.zoom = 1;
-      editorState.zoomMode = "fit";
-      editorState.compareMode = false;
-      editorState.compareSplit = 0.5;
-      editorState.pinchGesture = null;
-      activePointers.clear();
-      editorState.selectedRedactionId = null;
-      editorState.selectionInteraction = null;
-      editorState.selectionResizeHandle = null;
-
-      editorState.selectionOriginalWidth = 0;
-      editorState.selectionOriginalHeight = 0;
-
-      editorState.selectionHasMoved = false;
-
-      editorState.isAdjustingRegionStrength = false;
-      editorState.regionStrengthOriginalValue = null;
-      editorState.scanRequestId += 1;
-      editorState.isScanning = false;
-      resetHistory();
-      renderSensitiveDataPanel();
+      resetEditorDocumentState();
       showCanvas(sourceCanvas, file);
     });
 
@@ -441,9 +1339,15 @@ document.addEventListener("DOMContentLoaded", () => {
     image.src = objectUrl;
   }
 
-  function showCanvas(image, file) {
+  function showCanvas(image, file, options = {}) {
     emptyState.hidden = true;
     document.getElementById("editorCanvasStage")?.remove();
+
+    const isPdf = Boolean(options.isPdf || editorState.pdfSession);
+    const pdfPageCount = Number(options.pdfPageCount || editorState.pdfSession?.pageCount || 0);
+    const pdfPage = Number(options.pdfPage || editorState.pdfSession?.currentPage || 1);
+    const fileIcon = isPdf ? "picture_as_pdf" : "image";
+    const openLabel = isPdf ? "Open another file" : null;
 
     const stage = document.createElement("div");
     stage.id = "editorCanvasStage";
@@ -451,7 +1355,7 @@ document.addEventListener("DOMContentLoaded", () => {
     stage.innerHTML = `
       <div class="editor-image-toolbar">
         <div class="editor-file-summary">
-          <span class="material-symbols-outlined" aria-hidden="true">image</span>
+          <span class="material-symbols-outlined" aria-hidden="true">${fileIcon}</span>
           <div class="editor-file-summary-text">
             <strong id="activeFileName"></strong>
             <span id="activeImageDimensions"></span>
@@ -486,11 +1390,26 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <button id="replaceImageButton" class="editor-replace-image-button" type="button">
               <span class="material-symbols-outlined" aria-hidden="true">upload</span>
-              <span data-i18n="editor.openAnother">Open another image</span>
+              <span ${openLabel ? "" : 'data-i18n="editor.openAnother"'}>${openLabel || "Open another image"}</span>
             </button>
           </div>
         </div>
       </div>
+      <nav id="pdfPageNav" class="editor-pdf-page-nav" aria-label="PDF pages" ${isPdf ? "" : "hidden"}>
+        <div class="editor-pdf-page-controls">
+          <button id="pdfPrevPage" class="editor-pdf-page-button" type="button" aria-label="Previous page">
+            <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+          </button>
+          <label class="editor-pdf-page-select-label">
+            <span id="pdfPageLabel">Page ${pdfPage} of ${pdfPageCount || 1}</span>
+            <select id="pdfPageSelect" class="editor-pdf-page-select" aria-label="Select PDF page"></select>
+          </label>
+          <button id="pdfNextPage" class="editor-pdf-page-button" type="button" aria-label="Next page">
+            <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+          </button>
+        </div>
+        <div id="pdfPageStrip" class="editor-pdf-page-strip" role="list"></div>
+      </nav>
       <div
   id="selectedRegionInspector"
   class="selected-region-inspector"
@@ -555,12 +1474,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const dimensionsLabel = document.getElementById("activeImageDimensions");
     if (dimensionsLabel) {
-      dimensionsLabel.textContent = `${imageWidth} × ${imageHeight} px`;
-      dimensionsLabel.title = `${imageWidth} × ${imageHeight} px`;
+      const pageNote = isPdf && pdfPageCount
+        ? ` · Page ${pdfPage} / ${pdfPageCount}`
+        : "";
+      dimensionsLabel.textContent = `${imageWidth} × ${imageHeight} px${pageNote}`;
+      dimensionsLabel.title = dimensionsLabel.textContent;
     }
 
     scanButton.addEventListener("click", () => scanImageForSensitiveData(scanButton));
     replaceButton.addEventListener("click", () => openDeviceImagePicker());
+    bindPdfPageNav(stage);
+    updatePdfPageNav({ isPdf, pdfPage, pdfPageCount });
 
     addCanvasEvents(canvas);
     initializeCompareControls();
@@ -575,7 +1499,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fitCanvasToViewport();
       syncUnifiedMobileToolbar();
     });
-    scanImageForSensitiveData(scanButton);
+    if (!options.skipAutoScan) scanImageForSensitiveData(scanButton);
   }
 
   function addCanvasEvents(canvas) {
@@ -3532,7 +4456,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     context.restore();
-    paintOverlay(detections, isDrawing);
+    paintOverlay(detectionsForCurrentPdfPage(), isDrawing);
     syncCompareOverlay();
   }
 
@@ -4628,6 +5552,14 @@ document.addEventListener("DOMContentLoaded", () => {
       showStatus("A batch is still processing through the single OCR worker.");
       return;
     }
+    if (editorState.pdfSession) {
+      if (editorState.isScanning || editorState.pdfSession.fullScanRunning) {
+        showStatus("A sensitive-data scan is already running.");
+        return;
+      }
+      await startPdfFullDocumentScan();
+      return;
+    }
     if (!editorState.image || editorState.isScanning) {
       if (editorState.isScanning) showStatus("A sensitive-data scan is already running.");
       return;
@@ -4654,25 +5586,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (requestId !== editorState.scanRequestId) return;
 
-      editorState.detections = detections;
-      editorState.reviewFinished = false;
-      if (detections.length) {
-        focusReviewDetection(0);
-      } else {
+      cacheActivePdfPageEdits();
+      const total = publishScanDetections(detections, { focusFirst: true, updateCanvas: true });
+      if (!total) {
         stopReviewSession();
         renderSensitiveDataPanel();
         renderCanvas();
+        updateActiveToolStatus("Text scan complete · No supported sensitive data found");
       }
-
-      const label = detections.length === 1 ? "potential item" : "potential items";
-      updateActiveToolStatus(
-        detections.length
-          ? `${detections.length} ${label} found · Review highlighted areas`
-          : "Text scan complete · No supported sensitive data found"
-      );
+      const label = total === 1 ? "potential item" : "potential items";
       showStatus(
-        detections.length
-          ? `${detections.length} ${label} found.`
+        total
+          ? `${total} ${label} found.`
           : "Text scan complete. No supported sensitive data was found."
       );
     } catch (error) {
@@ -4694,14 +5619,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function acceptBatchFiles(files) {
+    const pdfOnly = files.filter((file) => isPdfFile(file));
+    const imageFiles = files.filter((file) => allowedImageTypes.includes(file.type));
+    if (pdfOnly.length && !imageFiles.length && pdfOnly.length === 1 && !editorState.batchItems.length) {
+      loadPdfFile(pdfOnly[0]);
+      return;
+    }
     const selected = selectBatchFiles(files, {
-      allowedTypes,
+      allowedTypes: allowedImageTypes,
       maxBytes: maximumFileSize,
       limit: BATCH_IMAGE_LIMIT,
       existingCount: editorState.batchItems.length,
     });
     if (!selected.accepted.length) {
-      showStatus("Choose up to 20 PNG, JPG, or WebP images under 25 MB.", true);
+      showStatus(
+        pdfOnly.length
+          ? "PDF files open one at a time. Choose a single PDF, or up to 20 PNG, JPG, or WebP images under 25 MB."
+          : "Choose up to 20 PNG, JPG, or WebP images under 25 MB.",
+        true
+      );
       return;
     }
     loadOcrModule().catch(() => {});
@@ -4778,17 +5714,31 @@ document.addEventListener("DOMContentLoaded", () => {
     canvas.height = 0;
   }
 
-  async function detectImageCanvas(imageCanvas, onProgress) {
+  async function detectImageCanvas(imageCanvas, onProgress, options = {}) {
     const previousOverride = editorState.scanImageOverride;
     const previousLines = ocrLinesById;
     editorState.scanImageOverride = imageCanvas;
     try {
+      const pdfWords = editorState.pdfTextResult?.words;
+      if (!options.forceOcr && Array.isArray(pdfWords) && pdfWords.length) {
+        onProgress?.({ progress: 1 });
+        return buildDetectionsFromOcr(editorState.pdfTextResult);
+      }
+
       const ocrModule = await loadOcrModule();
       const sequence = await ocrModule.recognizeImageSequence([imageCanvas], (update) => {
         if (update.status === "processing") onProgress?.({ progress: update.progress });
       });
       const outcome = sequence[0];
       if (!outcome || outcome.status === "failed") throw outcome?.error || new Error("OCR failed");
+      // Persist OCR words so subsequent non-force scans can reuse them for this page.
+      if (outcome.result && editorState.pdfSession) {
+        editorState.pdfTextResult = {
+          words: outcome.result.words || [],
+          lines: outcome.result.lines || [],
+          text: outcome.result.text || "",
+        };
+      }
       return buildDetectionsFromOcr(outcome.result);
     } finally {
       editorState.scanImageOverride = previousOverride;
@@ -4796,43 +5746,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function buildDetectionsFromOcr(result) {
+  function buildDetectionsFromOcr(result, imageSizeOverride = null) {
     const words = Array.isArray(result?.words)
       ? result.words.filter((word) => word?.bbox && String(word.text || "").trim())
       : [];
     const lines = Array.isArray(result?.lines)
       ? result.lines.filter((line) => line?.bbox && String(line.text || "").trim())
       : [];
-    ocrLinesById = new Map(lines.map((line) => [line.id, line]));
-    const candidates = createDetectionCandidates(words);
-    const labeledValueDetections = detectValuesBesideSensitiveLabels(words);
-    const beforeSuppress = removeDuplicateDetections(
-      filterDetectionsForProfile([
-        ...detectApiTokenCandidates(candidates),
-        ...detectEmailCandidates(candidates),
-        ...detectTcknCandidates(candidates),
-        ...detectIpv4Candidates(candidates),
-        ...detectIpv6FromOcrWords(words),
-        ...detectGroupedSecretsFromOcrWords(words),
-        ...detectCreditCardCandidates(candidates),
-        ...detectPhoneCandidates(candidates),
-        ...detectPhonesFromOcrWords(words),
-        ...detectPersonNameCandidates(candidates),
-        ...detectLocationCandidates(candidates),
-        ...detectSessionIdCandidates(candidates),
-        ...detectStructuredDataFromLines(lines),
-        ...labeledValueDetections,
-      ], editorState.detectionProfile)
-    );
-    const afterSuppress = suppressShadowedDetections(beforeSuppress);
-    if (import.meta.env.DEV) {
-      void import("./ocr-debug.js").then(({ isDebugOcrEnabled, logDebugOcrTargetLines }) => {
-        if (isDebugOcrEnabled()) {
-          logDebugOcrTargetLines(lines, words, beforeSuppress, afterSuppress);
-        }
-      });
+
+    const overrideWidth = Number(imageSizeOverride?.imageWidth || result?.canvasWidth || 0);
+    const overrideHeight = Number(imageSizeOverride?.imageHeight || result?.canvasHeight || 0);
+    const previousOverride = editorState.scanImageOverride;
+    if (overrideWidth > 0 && overrideHeight > 0) {
+      // Keep bbox normalization relative to the page being scanned (not just the visible page).
+      editorState.scanImageOverride = { width: overrideWidth, height: overrideHeight };
     }
-    return limitToToolDetectors(afterSuppress, editorState.toolDetectors);
+
+    try {
+      ocrLinesById = new Map(lines.map((line) => [line.id, line]));
+      const candidates = createDetectionCandidates(words);
+      const labeledValueDetections = detectValuesBesideSensitiveLabels(words);
+      const beforeSuppress = removeDuplicateDetections(
+        filterDetectionsForProfile([
+          ...detectApiTokenCandidates(candidates),
+          ...detectEmailCandidates(candidates),
+          ...detectTcknCandidates(candidates),
+          ...detectIpv4Candidates(candidates),
+          ...detectIpv6FromOcrWords(words),
+          ...detectGroupedSecretsFromOcrWords(words),
+          ...detectCreditCardCandidates(candidates),
+          ...detectPhoneCandidates(candidates),
+          ...detectPhonesFromOcrWords(words),
+          ...detectPersonNameCandidates(candidates),
+          ...detectLocationCandidates(candidates),
+          ...detectSessionIdCandidates(candidates),
+          ...detectStructuredDataFromLines(lines),
+          ...labeledValueDetections,
+        ], editorState.detectionProfile)
+      );
+      const afterSuppress = suppressShadowedDetections(beforeSuppress);
+      if (import.meta.env.DEV) {
+        void import("./ocr-debug.js").then(({ isDebugOcrEnabled, logDebugOcrTargetLines }) => {
+          if (isDebugOcrEnabled()) {
+            logDebugOcrTargetLines(lines, words, beforeSuppress, afterSuppress);
+          }
+        });
+      }
+      return limitToToolDetectors(afterSuppress, editorState.toolDetectors);
+    } finally {
+      editorState.scanImageOverride = previousOverride;
+    }
   }
 
   async function consumeToolHandoff() {
@@ -6433,6 +7396,19 @@ document.addEventListener("DOMContentLoaded", () => {
     editorState.reviewFinished = false;
     editorState.reviewIndex = nextIndex;
     editorState.reviewFocusId = detection.id;
+
+    const targetPage = Number(detection.page) || 0;
+    const session = editorState.pdfSession;
+    if (session && targetPage > 0 && targetPage !== session.currentPage) {
+      void goToPdfPage(targetPage).then(() => {
+        if (editorState.reviewFocusId !== detection.id) return;
+        renderSensitiveDataPanel();
+        animateReviewFocus(detection);
+      });
+      renderSensitiveDataPanel();
+      return;
+    }
+
     renderSensitiveDataPanel();
     animateReviewFocus(detection);
   }
@@ -6627,6 +7603,14 @@ document.addEventListener("DOMContentLoaded", () => {
     renderCanvas();
   }
 
+  function removePdfDetectionFromCaches(detectionId) {
+    const session = editorState.pdfSession;
+    if (!session) return;
+    for (const entry of session.pageCache.values()) {
+      entry.detections = (entry.detections || []).filter((item) => item.id !== detectionId);
+    }
+  }
+
   function redactReviewedDetection(id) {
     const detection = editorState.detections.find((item) => item.id === id);
     const redaction = detection ? redactionFromDetection(detection) : null;
@@ -6634,8 +7618,20 @@ document.addEventListener("DOMContentLoaded", () => {
     applyReviewEffect(redaction, reviewEffectType());
     const removedIndex = editorState.detections.findIndex((item) => item.id === id);
     const countBefore = editorState.detections.length;
-    editorState.redactions.push(redaction);
-    editorState.detections = editorState.detections.filter((item) => item.id !== id);
+    const session = editorState.pdfSession;
+    const page = Number(detection.page) || session?.currentPage || 0;
+    if (session && page > 0) {
+      const entry = getPdfPageCacheEntry(page);
+      entry.redactions = [...(entry.redactions || []), redaction];
+      entry.detections = (entry.detections || []).filter((item) => item.id !== id);
+      if (page === session.currentPage) {
+        editorState.redactions = entry.redactions.map((item) => ({ ...item }));
+      }
+      syncDocumentDetectionsToEditor();
+    } else {
+      editorState.redactions.push(redaction);
+      editorState.detections = editorState.detections.filter((item) => item.id !== id);
+    }
     saveHistory();
     renderCanvas();
     updateRegionStatus();
@@ -6647,6 +7643,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const removedIndex = editorState.detections.findIndex((item) => item.id === id);
     if (removedIndex < 0) return;
     const countBefore = editorState.detections.length;
+    removePdfDetectionFromCaches(id);
     editorState.detections = editorState.detections.filter((item) => item.id !== id);
     saveHistory();
     renderCanvas();
@@ -6658,6 +7655,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const removedIndex = editorState.detections.findIndex((item) => item.id === id);
     if (removedIndex < 0) return;
     const countBefore = editorState.detections.length;
+    removePdfDetectionFromCaches(id);
     editorState.detections = editorState.detections.filter((item) => item.id !== id);
     saveHistory();
     renderCanvas();
@@ -6907,7 +7905,9 @@ document.addEventListener("DOMContentLoaded", () => {
     sensitiveDataPanel.classList.remove("is-review-complete", "is-awaiting");
     document.body.classList.remove("editor-sheet-complete", "editor-no-sheet");
 
-    if (!editorState.image) {
+    // Empty upload state only when there is no canvas AND no findings yet.
+    // PDF scans can publish detections into editorState before/while the page bitmap settles.
+    if (!editorState.image && !editorState.detections.length) {
       // Mobile empty state: hide the sheet entirely so it does not cover the upload UI.
       if (isMobileEditorLayout()) {
         sensitiveDataPanel.hidden = true;
@@ -7125,6 +8125,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <article class="real-detection-card review-active-card">
           <div class="real-detection-card-heading">
             <strong>${escapeHtml(title)}</strong>
+            ${Number(detection.page) > 0 ? `<span class="real-detection-page-badge">${escapeHtml(t("editor.pdfPageBadge", { page: detection.page }))}</span>` : ""}
             <span class="real-confidence-badge" data-i18n-title="editor.ocrConfidenceHint" title="${escapeHtml(t("editor.ocrConfidenceHint"))}">${confidence}%</span>
           </div>
           <code class="real-detection-text">${escapeHtml(detection.text)}</code>
@@ -7316,9 +8317,27 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       return redaction;
     }).filter(Boolean);
-    editorState.redactions.push(...newRedactions);
-    const applied = new Set(selected);
-    editorState.detections = editorState.detections.filter((detection) => !applied.has(detection));
+
+    const session = editorState.pdfSession;
+    if (session) {
+      cacheActivePdfPageEdits();
+      const appliedIds = new Set(selected.map((detection) => detection.id));
+      for (const redaction of newRedactions) {
+        const page = Number(redaction.page) || session.currentPage;
+        const entry = getPdfPageCacheEntry(page);
+        entry.redactions = [...(entry.redactions || []), redaction];
+        entry.detections = (entry.detections || []).filter((detection) => !appliedIds.has(detection.id));
+        entry.scanned = true;
+      }
+      const currentEntry = getPdfPageCacheEntry(session.currentPage);
+      editorState.redactions = (currentEntry.redactions || []).map((item) => ({ ...item }));
+      syncDocumentDetectionsToEditor();
+    } else {
+      editorState.redactions.push(...newRedactions);
+      const applied = new Set(selected);
+      editorState.detections = editorState.detections.filter((detection) => !applied.has(detection));
+    }
+
     editorState.reviewFinished = editorState.detections.length === 0;
     if (editorState.reviewFinished) stopReviewSession();
     saveHistory();
@@ -7352,7 +8371,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function redactionFromDetection(detection) {
-    const rect = detectionRenderRect(detection);
+    const session = editorState.pdfSession;
+    const page = Number(detection?.page) || session?.currentPage || 0;
+    let rect = null;
+    if (session && page > 0) {
+      const size = pdfPagePixelSize(page);
+      if (size.width > 0 && size.height > 0) {
+        rect = mapNormalizedBox(detection, size.width, size.height);
+      }
+    }
+    if (!rect) rect = detectionRenderRect(detection);
     if (!rect) return null;
     return {
       id: createId("redaction"),
@@ -7360,6 +8388,7 @@ document.addEventListener("DOMContentLoaded", () => {
       source: "automatic-detection",
       detectionType: detection.type,
       originalText: detection.text,
+      page: page || undefined,
       x: rect.x,
       y: rect.y,
       width: rect.width,
@@ -7512,19 +8541,34 @@ document.addEventListener("DOMContentLoaded", () => {
     menu.className = "export-menu";
     menu.hidden = true;
     menu.setAttribute("role", "dialog");
-    menu.setAttribute("aria-label", "Export image");
+    menu.setAttribute("aria-label", "Export");
     menu.innerHTML = `
       <p class="export-menu-title" data-i18n="editor.export">Export</p>
-      <div class="export-format-row" role="radiogroup" aria-label="Export format">
-        <button type="button" class="export-format-option is-selected" data-export-format="png" role="radio" aria-checked="true">PNG</button>
-        <button type="button" class="export-format-option" data-export-format="webp" role="radio" aria-checked="false">WebP</button>
-        <button type="button" class="export-format-option" data-export-format="jpeg" role="radio" aria-checked="false">JPEG</button>
+      <div id="exportImageOptions">
+        <div class="export-format-row" role="radiogroup" aria-label="Export format">
+          <button type="button" class="export-format-option is-selected" data-export-format="png" role="radio" aria-checked="true">PNG</button>
+          <button type="button" class="export-format-option" data-export-format="webp" role="radio" aria-checked="false">WebP</button>
+          <button type="button" class="export-format-option" data-export-format="jpeg" role="radio" aria-checked="false">JPEG</button>
+        </div>
+        <label class="export-quality" id="exportQualityField" hidden>
+          <span><span data-i18n="editor.quality">Quality</span> <output id="exportQualityValue">92%</output></span>
+          <input id="exportQualitySlider" type="range" min="0.60" max="1" step="0.01" value="0.92" aria-label="Export quality">
+        </label>
+        <p class="export-lossless-note" id="exportLosslessNote" data-i18n="editor.lossless">Lossless PNG</p>
       </div>
-      <label class="export-quality" id="exportQualityField" hidden>
-        <span><span data-i18n="editor.quality">Quality</span> <output id="exportQualityValue">92%</output></span>
-        <input id="exportQualitySlider" type="range" min="0.60" max="1" step="0.01" value="0.92" aria-label="Export quality">
-      </label>
-      <p class="export-lossless-note" id="exportLosslessNote" data-i18n="editor.lossless">Lossless PNG</p>
+      <div id="exportPdfOptions" hidden>
+        <div class="export-pdf-mode-row" role="radiogroup" aria-label="PDF export mode">
+          <button type="button" class="export-format-option is-selected" data-pdf-export-mode="flatten" role="radio" aria-checked="true" data-i18n="editor.pdfFlatten">
+            Flatten / Hard Redact
+          </button>
+          <button type="button" class="export-format-option" data-pdf-export-mode="vector" role="radio" aria-checked="false" data-i18n="editor.pdfVector">
+            Vector overlay
+          </button>
+        </div>
+        <p class="export-lossless-note" id="exportPdfModeNote" data-i18n="editor.pdfFlattenNote">
+          Rasterizes pages so redacted text cannot be selected or extracted.
+        </p>
+      </div>
       <button id="exportConfirmButton" class="export-confirm" type="button" data-i18n="editor.exportImage">Export image</button>
     `;
     document.body.appendChild(menu);
@@ -7533,6 +8577,9 @@ document.addEventListener("DOMContentLoaded", () => {
     menu.addEventListener("click", (event) => event.stopPropagation());
     menu.querySelectorAll("[data-export-format]").forEach((button) => {
       button.addEventListener("click", () => selectExportFormat(button.dataset.exportFormat));
+    });
+    menu.querySelectorAll("[data-pdf-export-mode]").forEach((button) => {
+      button.addEventListener("click", () => selectPdfExportMode(button.dataset.pdfExportMode));
     });
     menu.querySelector("#exportQualitySlider")?.addEventListener("input", (event) => {
       editorState.exportQuality = clamp(Number(event.target.value), 0.6, 1);
@@ -7545,11 +8592,56 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("editorDownloadButton")?.setAttribute("aria-expanded", "false");
       await downloadCleanImage();
     });
+    syncExportMenuForSource();
+  }
+
+  function syncExportMenuForSource() {
+    const menu = document.getElementById("exportMenu");
+    if (!menu) return;
+    const isPdf = Boolean(editorState.pdfSession);
+    const imageOptions = menu.querySelector("#exportImageOptions");
+    const pdfOptions = menu.querySelector("#exportPdfOptions");
+    const confirm = menu.querySelector("#exportConfirmButton");
+    if (imageOptions) imageOptions.hidden = isPdf;
+    if (pdfOptions) pdfOptions.hidden = !isPdf;
+    if (confirm) {
+      if (isPdf) {
+        confirm.setAttribute("data-i18n", "editor.exportPdf");
+        confirm.textContent = t("editor.exportPdf");
+      } else {
+        confirm.setAttribute("data-i18n", "editor.exportImage");
+        confirm.textContent = t("editor.exportImage");
+      }
+    }
+    if (isPdf) selectPdfExportMode(editorState.pdfExportMode || PDF_EXPORT_MODES.FLATTEN);
+    applyI18n(menu);
+  }
+
+  function selectPdfExportMode(mode) {
+    const nextMode = mode === PDF_EXPORT_MODES.VECTOR
+      ? PDF_EXPORT_MODES.VECTOR
+      : PDF_EXPORT_MODES.FLATTEN;
+    editorState.pdfExportMode = nextMode;
+    document.querySelectorAll("[data-pdf-export-mode]").forEach((button) => {
+      const selected = button.dataset.pdfExportMode === nextMode;
+      button.classList.toggle("is-selected", selected);
+      button.setAttribute("aria-checked", String(selected));
+    });
+    const note = document.getElementById("exportPdfModeNote");
+    if (note) {
+      const key = nextMode === PDF_EXPORT_MODES.FLATTEN
+        ? "editor.pdfFlattenNote"
+        : "editor.pdfVectorNote";
+      note.setAttribute("data-i18n", key);
+      note.textContent = t(key);
+    }
   }
 
   function toggleExportMenu(anchor) {
+    ensureExportMenu();
     const menu = document.getElementById("exportMenu");
     if (!menu || !anchor) return;
+    syncExportMenuForSource();
     const willOpen = menu.hidden;
     menu.hidden = !willOpen;
     anchor.setAttribute("aria-expanded", String(willOpen));
@@ -7560,6 +8652,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /** Review-complete "İndir" must not synthesize a header click (document click closes the menu). */
   function openExportFromReview(anchor) {
     ensureExportMenu();
+    syncExportMenuForSource();
     const menu = document.getElementById("exportMenu");
     const headerDownload = document.getElementById("editorDownloadButton");
     if (!menu) {
@@ -8447,6 +9540,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function downloadCleanImage() {
+    if (editorState.pdfSession) {
+      await downloadRedactedPdf();
+      return;
+    }
+
     const sourceName = editorState.sourceName || editorState.file?.name;
     if (!editorState.image || !sourceName) {
       showStatus("Please open an image before downloading.", true);
@@ -8487,6 +9585,121 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Download failed:", error);
       showStatus("The cleaned image could not be created.", true);
+    }
+  }
+
+  function collectPdfRedactionsByPage() {
+    cacheActivePdfPageEdits();
+    const session = editorState.pdfSession;
+    const map = new Map();
+    if (!session) return map;
+    for (let page = 1; page <= session.pageCount; page += 1) {
+      const cached = session.pageCache.get(page);
+      map.set(page, Array.isArray(cached?.redactions) ? cached.redactions.map((item) => ({ ...item })) : []);
+    }
+    if (!map.has(session.currentPage)) {
+      map.set(session.currentPage, editorState.redactions.map((item) => ({ ...item })));
+    }
+    return map;
+  }
+
+  function setPdfExportProgress({ visible, page = 0, pageCount = 0, progress = 0 }) {
+    const overlay = document.getElementById("pdfExportProgress");
+    if (!overlay) return;
+    overlay.hidden = !visible;
+    overlay.setAttribute("aria-busy", visible ? "true" : "false");
+    const bar = document.getElementById("pdfExportProgressBar");
+    const label = document.getElementById("pdfExportProgressLabel");
+    const percent = Math.max(0, Math.min(100, Math.round(Number(progress) * 100)));
+    if (bar) {
+      bar.value = percent;
+      bar.max = 100;
+    }
+    if (label) {
+      label.textContent = pageCount > 0
+        ? t("editor.pdfExportProgress", { page, pageCount, percent })
+        : t("editor.pdfExportPreparing");
+    }
+  }
+
+  async function downloadRedactedPdf() {
+    const session = editorState.pdfSession;
+    const sourceName = editorState.sourceName || session?.file?.name;
+    if (!session?.file || !sourceName) {
+      showStatus("Please open a PDF before downloading.", true);
+      return;
+    }
+    if (editorState.isExportingPdf) {
+      showStatus("PDF export is already running.");
+      return;
+    }
+    if (!(await confirmExportWithUnresolvedSuggestions())) return;
+
+    editorState.isExportingPdf = true;
+    setPdfExportProgress({ visible: true, page: 0, pageCount: session.pageCount, progress: 0 });
+
+    try {
+      const pdfBytes = await session.file.arrayBuffer();
+      const redactionsByPage = collectPdfRedactionsByPage();
+      const mode = editorState.pdfExportMode === PDF_EXPORT_MODES.VECTOR
+        ? PDF_EXPORT_MODES.VECTOR
+        : PDF_EXPORT_MODES.FLATTEN;
+
+      const bytes = await exportRedactedPdf({
+        pdfBytes,
+        redactionsByPage,
+        scale: session.scale || PDF_DEFAULT_SCALE,
+        mode,
+        onProgress: ({ page, pageCount, progress }) => {
+          setPdfExportProgress({ visible: true, page, pageCount, progress });
+        },
+        renderPage: async (pageNumber, scale) => {
+          const cached = session.pageCache.get(pageNumber);
+          if (cached?.canvas) {
+            return {
+              canvas: cached.canvas,
+              width: cached.canvas.width,
+              height: cached.canvas.height,
+            };
+          }
+          const rendered = await renderPdfPage(session.document, pageNumber, { scale });
+          return {
+            canvas: rendered.canvas,
+            width: rendered.canvas.width,
+            height: rendered.canvas.height,
+          };
+        },
+        canvasDeps: {
+          drawBlur: drawBlurOnOutputCanvas,
+          drawPixelate: drawPixelateOnOutputCanvas,
+        },
+      });
+
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const fileName = createRedactedPdfFileName(sourceName);
+      if (Capacitor.isNativePlatform()) {
+        await saveImageToDevice(blob, fileName);
+      } else {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      showStatus(
+        mode === PDF_EXPORT_MODES.FLATTEN
+          ? "PDF exported with hard redaction (flattened pages)."
+          : "PDF exported with redaction overlays."
+      );
+    } catch (error) {
+      console.error("PDF export failed:", error);
+      showStatus("The redacted PDF could not be created.", true);
+    } finally {
+      editorState.isExportingPdf = false;
+      setPdfExportProgress({ visible: false });
     }
   }
 
@@ -8812,8 +10025,8 @@ document.addEventListener("DOMContentLoaded", () => {
       overlay.innerHTML = `
         <div class="editor-drop-card">
           <span class="material-symbols-outlined" aria-hidden="true">add_photo_alternate</span>
-          <strong>Drop your screenshot here</strong>
-          <span>PNG, JPG or WebP</span>
+          <strong>Drop your screenshot or PDF here</strong>
+          <span>PNG, JPG, WebP or PDF</span>
         </div>
       `;
       document.body.appendChild(overlay);

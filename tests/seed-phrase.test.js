@@ -109,4 +109,22 @@ describe("seed_phrase detector", () => {
     });
     assert.equal(detections.filter((item) => item.type === "seed_phrase").length, 0);
   });
+
+  it("ignores lowercase English prose that is not a BIP39 wordlist run", () => {
+    const prose =
+      "the quick brown fox jumps over the lazy dog and then some more words go here today";
+    assert.deepEqual(extractSeedPhraseMatches(prose), []);
+
+    // Mixed dictionary words that are not all BIP39.
+    const mixed =
+      "please bring the documents keys and forms to the front desk today now";
+    assert.deepEqual(extractSeedPhraseMatches(mixed), []);
+  });
+
+  it("still matches a real BIP39 12-word phrase", () => {
+    const matches = extractSeedPhraseMatches(WORDS_12.join(" "));
+    assert.equal(matches.length, 1);
+    assert.equal(matches[0].needsReview, true);
+    assert.equal(matches[0].text.split(/\s+/).length, 12);
+  });
 });

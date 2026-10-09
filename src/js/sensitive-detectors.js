@@ -4,6 +4,7 @@ import {
   groupWordsByLine,
   wordsForJoinedRange,
 } from "./cross-line.js";
+import { BIP39_ENGLISH_SET } from "./data/bip39-english.js";
 
 const GIVEN_NAMES = new Set([
   "ada", "ahmet", "ali", "asli", "asya", "ayse", "aylin", "azra", "banu", "baran",
@@ -1858,23 +1859,48 @@ export function detectCreditCard(value, bbox) {
   return extractCreditCardCandidates(value).map((text) => asDetection(text, "credit_card", 0.93, bbox));
 }
 
+/** Common English stopwords — windows dominated by these are almost never seed phrases. */
+const SEED_PHRASE_STOPWORDS = new Set([
+  "a", "an", "the", "and", "or", "but", "if", "then", "than", "that", "this", "these", "those",
+  "to", "of", "in", "on", "for", "with", "as", "at", "by", "from", "into", "over", "under",
+  "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "do", "does", "did",
+  "will", "would", "could", "should", "may", "might", "must", "can", "shall",
+  "i", "you", "he", "she", "it", "we", "they", "me", "him", "her", "us", "them",
+  "my", "your", "his", "its", "our", "their", "not", "no", "yes", "so", "very", "just",
+  "about", "above", "after", "again", "all", "also", "any", "because", "before", "between",
+  "both", "each", "few", "more", "most", "other", "some", "such", "only", "own", "same",
+  "too", "up", "down", "out", "off", "here", "there", "when", "where", "why", "how",
+  "what", "which", "who", "whom", "while", "during", "through", "until", "once",
+]);
+
 /**
- * 12 or 24 consecutive lowercase dictionary-like words (BIP39-style seed phrases).
- * Always review-only — never auto-applied.
+ * 12 or 24 consecutive lowercase BIP39 English words (review-only).
+ * Rejects ordinary prose via wordlist membership + stopword density checks.
  */
 export function extractSeedPhraseMatches(value) {
   const source = String(value || "");
   if (!source.trim()) return [];
-  // Tokenize on whitespace; require pure lowercase a-z words (no punctuation/capitals).
+  if (!BIP39_ENGLISH_SET || BIP39_ENGLISH_SET.size < 1000) return [];
+
   const tokens = source.trim().split(/\s+/);
   const matches = [];
   for (const count of [24, 12]) {
     for (let index = 0; index + count <= tokens.length; index += 1) {
       const slice = tokens.slice(index, index + count);
       if (!slice.every((word) => /^[a-z]+$/.test(word))) continue;
-      // Avoid matching tiny words-only noise: require average length >= 3.
       const avg = slice.reduce((sum, word) => sum + word.length, 0) / slice.length;
       if (avg < 3) continue;
+
+      // Require every token to be an official BIP39 English word.
+      if (!slice.every((word) => BIP39_ENGLISH_SET.has(word))) continue;
+
+      const stopCount = slice.filter((word) => SEED_PHRASE_STOPWORDS.has(word)).length;
+      // Real seed phrases rarely cluster this many function words.
+      if (stopCount > Math.floor(count * 0.35)) continue;
+
+      const unique = new Set(slice).size;
+      if (unique < Math.ceil(count * 0.75)) continue;
+
       const text = slice.join(" ");
       const occurrence = matches.filter((item) => item.span === text).length;
       matches.push({
@@ -1883,7 +1909,6 @@ export function extractSeedPhraseMatches(value) {
         needsReview: true,
         ...(occurrence > 0 ? { occurrence } : {}),
       });
-      // Prefer longest non-overlapping run starting here.
       break;
     }
     if (matches.length) break;

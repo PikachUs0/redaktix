@@ -365,6 +365,102 @@
   font-size: 17px;
 }
 
+.editor-pdf-page-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 0 0 auto;
+  border-bottom: 1px solid #243044;
+  padding: 8px 16px 10px;
+  background: rgba(12, 18, 32, 0.96);
+}
+
+.editor-pdf-page-nav[hidden] {
+  display: none;
+}
+
+.editor-pdf-page-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.editor-pdf-page-button {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #172033;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.editor-pdf-page-button:hover:not(:disabled) {
+  border-color: #3b82f6;
+  background: #1e293b;
+}
+
+.editor-pdf-page-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.editor-pdf-page-select-label {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: #cbd5e1;
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.editor-pdf-page-select {
+  min-width: 4.5rem;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 6px 8px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.editor-pdf-page-strip {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.editor-pdf-page-thumb {
+  flex: 0 0 auto;
+  min-width: 36px;
+  height: 32px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #111827;
+  color: #94a3b8;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.editor-pdf-page-thumb.is-active,
+.editor-pdf-page-thumb[aria-current="page"] {
+  border-color: #3b82f6;
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
 .editor-canvas-viewport {
   position: relative;
 
@@ -2539,6 +2635,117 @@ html[data-theme="dark"] .export-menu {
   background: #2563eb;
   color: #ffffff;
   text-align: center;
+}
+
+.export-pdf-mode-row {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.export-pdf-mode-row .export-format-option {
+  padding: 8px 10px;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.pdf-scan-progress {
+  position: fixed;
+  left: 16px;
+  bottom: 72px;
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 32px));
+  padding: 8px 12px;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #e2e8f0;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.pdf-scan-progress[hidden] {
+  display: none;
+}
+
+.pdf-scan-progress.is-error {
+  border-color: #b91c1c;
+  background: rgba(127, 29, 29, 0.92);
+  color: #fecaca;
+}
+
+.pdf-scan-progress.is-error .pdf-scan-progress-icon {
+  color: #fca5a5;
+}
+
+.pdf-scan-progress-icon {
+  color: #60a5fa;
+  font-size: 18px;
+}
+
+.real-detection-page-badge {
+  margin-left: 6px;
+  padding: 2px 7px;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  background: #111827;
+  color: #93c5fd;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.pdf-export-progress {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.pdf-export-progress[hidden] {
+  display: none;
+}
+
+.pdf-export-progress-card {
+  width: min(360px, 100%);
+  padding: 18px 16px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #f8fafc;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.pdf-export-progress-title {
+  margin: 0 0 12px;
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pdf-export-progress-bar {
+  width: 100%;
+  height: 10px;
+  accent-color: #2563eb;
+}
+
+.pdf-export-progress-label {
+  margin: 10px 0 0;
+  color: #94a3b8;
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
 }
 
 .editor-toolbar-actions {

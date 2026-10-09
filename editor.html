@@ -226,6 +226,35 @@
     </script>
   </main>
 </div>
+<div
+  id="pdfScanProgress"
+  class="pdf-scan-progress"
+  hidden
+  role="status"
+  aria-live="polite"
+  aria-busy="false"
+>
+  <span class="material-symbols-outlined pdf-scan-progress-icon" aria-hidden="true">document_scanner</span>
+  <span id="pdfScanProgressLabel" data-i18n="editor.pdfScanPreparing">Preparing document scan…</span>
+</div>
+
+<div
+  id="pdfExportProgress"
+  class="pdf-export-progress"
+  hidden
+  role="status"
+  aria-live="polite"
+  aria-busy="false"
+>
+  <div class="pdf-export-progress-card">
+    <p class="pdf-export-progress-title" data-i18n="editor.exportPdf">Export PDF</p>
+    <progress id="pdfExportProgressBar" class="pdf-export-progress-bar" max="100" value="0"></progress>
+    <p id="pdfExportProgressLabel" class="pdf-export-progress-label" data-i18n="editor.pdfExportPreparing">
+      Preparing PDF export…
+    </p>
+  </div>
+</div>
+
 <script type="module" src="/src/js/editor.js"></script>
 </body>
 </html>
