@@ -56,6 +56,8 @@ const SINGLE_MODE_DETECTORS = Object.freeze([
   "person_name",
   "location",
   "session_id",
+  "ssn",
+  "routing_number",
   "custom_rule",
 ]);
 

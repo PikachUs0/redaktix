@@ -70,6 +70,19 @@ function isHtmlOrJsRequest(request) {
   return path.endsWith(".html") || path.endsWith(".js") || path.endsWith(".mjs");
 }
 
+/**
+ * Programmatic-SEO tool pages (/tools/<slug>/) are emitted at build time by
+ * scripts/build-tools.js, so they are absent when write-sw.js stamps PRECACHE.
+ * Cache them at runtime (dynamic route caching) instead of precaching.
+ */
+const TOOL_ROUTE_PREFIX = "/tools/";
+
+function isToolRoute(request) {
+  if (request.method !== "GET") return false;
+  const { pathname } = new URL(request.url);
+  return pathname === "/tools" || pathname.startsWith(TOOL_ROUTE_PREFIX);
+}
+
 async function fromCache(request) {
   const cache = await caches.open(CACHE);
   return cache.match(request) || cache.match(new URL(request.url).pathname);
@@ -121,7 +134,7 @@ async function staleWhileRevalidate(request, event) {
 
 self.addEventListener("fetch", (event) => {
   if (!shouldHandle(event.request)) return;
-  if (isHtmlOrJsRequest(event.request)) {
+  if (isToolRoute(event.request) || isHtmlOrJsRequest(event.request)) {
     event.respondWith(networkFirst(event.request));
     return;
   }

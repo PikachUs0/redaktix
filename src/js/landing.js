@@ -1,9 +1,16 @@
 import "../css/fonts.css";
 import { registerRedaktixWorker } from "./pwa.js";
+import { initPwaInstall } from "./pwa-install.js";
+import { ANALYTICS_SINK_KEY } from "./analytics.js";
 import { startI18n, t } from "./i18n.js";
 import { initMarketingAnalytics } from "./marketing-analytics.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // Marketing-only sink: forward first-party product events to Vercel Web Analytics.
+  // The redaction app never registers this sink, so its events stay local.
+  window[ANALYTICS_SINK_KEY] = (name, data) => {
+    if (typeof window.va === "function") window.va("event", { name, data });
+  };
   // Marketing surfaces only — never imported by the editor/app bundle.
   initMarketingAnalytics();
   const sectionLinks = {
@@ -116,6 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
 fixLandingBrand();
   initializeLocalProcessingBadge();
   registerRedaktixWorker();
+  initPwaInstall();
 
   document.querySelectorAll("[data-open-dialog]").forEach((button) => {
     button.addEventListener("click", () => {

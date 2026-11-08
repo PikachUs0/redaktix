@@ -186,14 +186,12 @@ export function textItemToViewportBBox(item, viewport, transformFn = multiplyTra
   if (Number(options.ascentRatio) > 0 && Number(options.ascentRatio) <= 1) {
     ascentRatio = Number(options.ascentRatio);
   } else if (style && Number(style.ascent) > 0 && Number(style.ascent) <= 1) {
-    // pdf.js TextStyle.ascent is a fraction of the em box (same as TextLayer.#getAscent fallback).
     ascentRatio = Number(style.ascent);
   } else if (style && Number(style.descent) < 0 && Number(style.descent) >= -1) {
     ascentRatio = 1 + Number(style.descent);
   }
   ascentRatio = Math.min(0.95, Math.max(0.55, ascentRatio));
 
-  // item.width is in text-space units (same as the font size on the text matrix).
   const textFontSize = Math.hypot(item.transform[2], item.transform[3])
     || Math.hypot(item.transform[0], item.transform[1])
     || 1;
@@ -207,7 +205,6 @@ export function textItemToViewportBBox(item, viewport, transformFn = multiplyTra
     : DEFAULT_PDF_BBOX_PAD_RATIO;
   const pad = fontHeight * padRatio;
   const ascent = fontHeight * ascentRatio;
-  // Baseline is tx[5]; top of ink ≈ baseline − ascent (pdf.js TextLayer).
   const x = tx[4];
   const y = tx[5] - ascent - pad;
   const height = fontHeight + pad * 2;
@@ -326,7 +323,6 @@ export function pdfTextContentToOcrResult(textContent, viewport, options = {}) {
     }
   }
 
-  // Fallback: group by visual Y when PDF never set hasEOL.
   if (lineBuckets.size <= 1 && words.length > 1) {
     lineBuckets.clear();
     for (const word of words) {
@@ -380,6 +376,61 @@ export function pdfTextContentToOcrResult(textContent, viewport, options = {}) {
 }
 
 /**
+ * Clean metadata streams from a pdf-lib PDFDocument instance prior to export.
+ * @param {import('pdf-lib').PDFDocument} pdfDoc
+ */
+export function scrubPdfMetadata(pdfDoc) {
+  if (!pdfDoc) return;
+  try {
+    pdfDoc.setTitle('');
+    pdfDoc.setAuthor('');
+    pdfDoc.setSubject('');
+    pdfDoc.setKeywords([]);
+    pdfDoc.setProducer('Redaktix Local Engine');
+    pdfDoc.setCreator('Redaktix');
+    pdfDoc.setCreationDate(new Date(0));
+    pdfDoc.setModificationDate(new Date(0));
+  } catch {
+    // Ignore metadata cleanup errors if fields are missing
+  }
+}
+
+/**
+ * Verify post-redaction integrity by parsing exported PDF bytes and checking for target terms.
+ * @param {ArrayBuffer | Uint8Array} exportedPdfBytes
+ * @param {string[]} targetTerms
+ * @returns {Promise<{ verified: boolean, leaksFound: Array<{ page: number, term: string }> }>}
+ */
+export async function verifyRedactionIntegrity(exportedPdfBytes, targetTerms = []) {
+  if (!targetTerms || !targetTerms.length) {
+    return { verified: true, leaksFound: [] };
+  }
+  const cleanTerms = targetTerms.map(t => String(t || "").trim()).filter(t => t.length > 2);
+  if (!cleanTerms.length) {
+    return { verified: true, leaksFound: [] };
+  }
+
+  const pdf = await loadPdfDocument(exportedPdfBytes);
+  const leaksFound = [];
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const pageContent = await extractPdfPageContent(pdf, pageNum);
+    const extractedText = pageContent.text || "";
+
+    for (const term of cleanTerms) {
+      if (extractedText.includes(term)) {
+        leaksFound.push({ page: pageNum, term });
+      }
+    }
+  }
+
+  return {
+    verified: leaksFound.length === 0,
+    leaksFound,
+  };
+}
+
+/**
  * @param {ArrayBuffer | Uint8Array | { data: ArrayBuffer | Uint8Array }} source
  * @param {object} [options]
  * @returns {Promise<import('pdfjs-dist').PDFDocumentProxy>}
@@ -392,7 +443,6 @@ export async function loadPdfDocument(source, options = {}) {
     }
 
     const raw = source?.data || source;
-    // Copy bytes: pdf.js may transfer/detach the ArrayBuffer to the worker.
     const data = raw instanceof Uint8Array
       ? raw.slice()
       : new Uint8Array(raw);
@@ -476,8 +526,7 @@ export async function extractPdfPageContent(pdf, pageNumber, options = {}) {
 }
 
 /**
- * Render one PDF page to a canvas (lazy display / export). Optionally skips text extract
- * when `options.words` is already known.
+ * Render one PDF page to a canvas (lazy display / export).
  *
  * @param {import('pdfjs-dist').PDFDocumentProxy} pdf
  * @param {number} pageNumber 1-based
@@ -590,7 +639,6 @@ export function aggregatePdfDetections(pages) {
 
 /**
  * Iterate every page: extract text (no canvases) and optionally run detectFn.
- * Designed for background full-document scans after upload.
  *
  * @param {import('pdfjs-dist').PDFDocumentProxy} pdf
  * @param {{

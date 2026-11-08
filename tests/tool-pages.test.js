@@ -28,6 +28,9 @@ describe("tool registry", () => {
       "hide-ip-address",
       "redact-credit-card",
       "hide-jwt-token",
+      "redact-ssn-pdf",
+      "anonymize-w2-tax-form",
+      "blur-routing-number",
       "tckn-gizle",
       "ekran-goruntusu-telefon-gizle",
     ]);
@@ -68,6 +71,25 @@ describe("tool registry", () => {
     assert.equal(sitemapPaths().includes("/"), true);
     assert.equal(sitemapPaths().includes("/security/"), true);
     assert.equal(sitemapPaths().includes("/tools/"), true);
+  });
+
+  it("injects the SEO article below the dropzone for US intent tools", () => {
+    const usSlugs = ["redact-ssn-pdf", "anonymize-w2-tax-form", "blur-routing-number"];
+    for (const slug of usSlugs) {
+      const entry = getToolBySlug(slug);
+      assert.equal(typeof entry.seoArticle, "string", `${slug} needs a seoArticle`);
+      assert.ok(entry.seoArticle.length > 200, `${slug} seoArticle should be substantial`);
+      const page = renderToolPage(entry);
+      assert.match(page, /<article class="prose max-w-none mt-12">/);
+      assert.match(page, /Why Local-First Privacy Matters/);
+    }
+    assert.match(renderToolPage(getToolBySlug("redact-ssn-pdf")), /How to Redact SSN from PDFs Locally/);
+    assert.match(renderToolPage(getToolBySlug("anonymize-w2-tax-form")), /How to Anonymize a W-2 Tax Form/);
+    assert.match(renderToolPage(getToolBySlug("blur-routing-number")), /How to Blur a Bank Routing Number/);
+    // The article container must sit after the dropzone and not on tools without seoArticle.
+    const withArticle = renderToolPage(getToolBySlug("redact-ssn-pdf"));
+    assert.ok(withArticle.indexOf("data-tool-dropzone") < withArticle.indexOf('<article class="prose'));
+    assert.doesNotMatch(renderToolPage(getToolBySlug("hide-api-key")), /<article class="prose/);
   });
 
   it("keeps the OCR worker module off the initial import graph", () => {

@@ -30,6 +30,7 @@
   <meta name="theme-color" content="#0a0f1d" />
   <!-- First-party cookieless marketing analytics only (same-origin). Leave empty to disable. Never used by editor.html. -->
   <meta name="redaktix-analytics-endpoint" content="" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self' blob:;">
   <link rel="icon" href="/icons/icon-192.png" />
   <!-- Self-hosted Material Symbols (privacy boundary: no fonts.googleapis.com). -->
   <link rel="stylesheet" href="/src/css/material-symbols.css" />
@@ -68,7 +69,7 @@
           href="/editor.html#security" data-i18n="nav.security">Security</a>
       </nav>
       <!-- Right Side Actions -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3" data-pwa-install-mount>
         <div class="local-processing-anchor">
           <a id="localProcessingBadge" class="local-processing-badge" href="/security/" data-i18n="badge.local">🟢 100%
             Local Processing (Zero Data Upload)</a>

@@ -1,6 +1,10 @@
 import "../css/tool-page.css";
 import { loadOcrModule } from "./ocr-loader.js";
 import { stashPendingToolFile } from "./tool-handoff.js";
+import { initPwaInstall } from "./pwa-install.js";
+import { trackEvent } from "./analytics.js";
+
+initPwaInstall();
 
 const root = document.querySelector("[data-tool-slug]");
 const slug = root?.dataset.toolSlug || "";
@@ -15,8 +19,9 @@ async function acceptToolFile(file) {
   try {
     await stashPendingToolFile(slug, file);
   } catch {
-    if (status) status.textContent = "Open the editor and drop the image there. Storage was unavailable.";
+    if (status) status.textContent = "Open the editor and drop the file there. Storage was unavailable.";
   }
+  trackEvent("file_selected", { tool: slug });
   window.location.href = `/editor.html?tool=${encodeURIComponent(slug)}`;
 }
 

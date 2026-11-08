@@ -6,6 +6,8 @@ import { Share } from "@capacitor/share";
 import "./theme.js";
 import { applyI18n, onLanguageChange, startI18n, t } from "./i18n.js";
 import { registerRedaktixWorker } from "./pwa.js";
+import { initPwaInstall } from "./pwa-install.js";
+import { trackEvent } from "./analytics.js";
 import {
   deleteUserCustomRule,
   loadCustomRules,
@@ -80,6 +82,8 @@ import {
   detectGroupedSecretsInScan,
   extractVknCandidates,
   detectCreditCard,
+  extractSsnCandidates,
+  extractRoutingNumberCandidates,
   buildDetectionReview,
   detectionsForAutomaticRedaction,
   cloneDetectionForHistory,
@@ -320,6 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initializeLocalProcessingBadge();
   initializeMobileDesktopNotice();
   registerRedaktixWorker();
+  initPwaInstall();
   initializeToolShortcutLabels();
   initializeZoomControls();
   ensureReviewViewportObserver();
@@ -5775,6 +5780,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ...detectIpv6FromOcrWords(words),
           ...detectGroupedSecretsFromOcrWords(words),
           ...detectCreditCardCandidates(candidates),
+          ...detectSsnCandidates(candidates),
+          ...detectRoutingNumberCandidates(candidates),
           ...detectPhoneCandidates(candidates),
           ...detectPhonesFromOcrWords(words),
           ...detectPersonNameCandidates(candidates),
@@ -6203,6 +6210,34 @@ document.addEventListener("DOMContentLoaded", () => {
         label: "Possible card number",
         text,
       }))
+    );
+  }
+
+  function detectSsnCandidates(candidates) {
+    return detectByValues(candidates, (value) =>
+      extractSsnCandidates(value).map((candidate) => {
+        const isReview = Boolean(candidate && typeof candidate === "object");
+        return {
+          type: "ssn",
+          label: "Possible SSN",
+          text: isReview ? candidate.text : candidate,
+          reviewHints: isReview ? { ssnUnlabeled: true } : undefined,
+        };
+      })
+    );
+  }
+
+  function detectRoutingNumberCandidates(candidates) {
+    return detectByValues(candidates, (value) =>
+      extractRoutingNumberCandidates(value).map((candidate) => {
+        const isReview = Boolean(candidate && typeof candidate === "object");
+        return {
+          type: "routing_number",
+          label: "Possible routing number",
+          text: isReview ? candidate.text : candidate,
+          reviewHints: isReview ? { routingUnlabeled: true } : undefined,
+        };
+      })
     );
   }
 
@@ -7959,13 +7994,21 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="real-detection-panel-meta">
             <button id="reviewExportButton" class="review-action review-action-redact review-complete-download" type="button" data-i18n="editor.download">Download</button>
+            <a id="buyMeCoffeeButton" class="review-action review-bmac" href="https://redaktix.com/support" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined" aria-hidden="true">local_cafe</span>
+              Buy Me a Coffee
+            </a>
           </div>
         </div>
         <div class="review-sheet-body">
           <div class="review-complete-card">
             <span class="material-symbols-outlined" aria-hidden="true">verified</span>
             <p data-i18n="editor.readyBody">${escapeHtml(t("editor.readyBody"))}</p>
+            <p class="review-complete-local">Processed 100% locally in your browser. No upload, no server — the file and its details never leave this device.</p>
             <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
+            <div id="adsense-success-banner" class="adsense-success-banner" role="complementary" aria-label="Advertisement">
+              <span>Advertisement</span>
+            </div>
           </div>
         </div>
       `;
@@ -8171,6 +8214,8 @@ document.addEventListener("DOMContentLoaded", () => {
       ipv4: { title: "Possible IP address", icon: "lan" },
       ipv6: { title: "Possible IPv6 address", icon: "lan" },
       credit_card: { title: "Possible card number", icon: "credit_card" },
+      ssn: { title: "Possible SSN", icon: "badge" },
+      routing_number: { title: "Possible routing number", icon: "account_balance" },
       session_id: { title: "Possible session ID", icon: "badge" },
       custom_rule: { title: "Custom rule", icon: "tune" },
     }[type] || { title: "Possible sensitive data", icon: "warning" };
@@ -9582,6 +9627,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
       showStatus("Image exported with EXIF metadata stripped");
+      trackEvent("redaction_downloaded");
     } catch (error) {
       console.error("Download failed:", error);
       showStatus("The cleaned image could not be created.", true);
@@ -9694,6 +9740,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? "PDF exported with hard redaction (flattened pages)."
           : "PDF exported with redaction overlays."
       );
+      trackEvent("redaction_downloaded");
     } catch (error) {
       console.error("PDF export failed:", error);
       showStatus("The redacted PDF could not be created.", true);

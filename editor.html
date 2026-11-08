@@ -12,6 +12,7 @@
   <title data-i18n="meta.editorTitle">Redaktix Editor</title>
   <link rel="manifest" href="/manifest.webmanifest"/>
   <meta name="theme-color" content="#0a0f1d"/>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self' blob:;">
   <link rel="icon" href="/icons/icon-192.png"/>
 </head>
 <body class="bg-surface font-body-md text-body-md text-on-surface antialiased overflow-x-hidden">
@@ -63,7 +64,7 @@
     <output id="toolIntensityValue" for="toolIntensitySlider">10px</output>
   </div>
 
-  <div class="editor-topbar-actions">
+  <div class="editor-topbar-actions" data-pwa-install-mount>
     <div class="local-processing-anchor">
       <a id="localProcessingBadge" class="local-processing-badge" href="/security/" data-i18n="badge.localCompact" title="100% Local Processing (Zero Data Upload)">🟢 100% Local</a>
       <div id="localProcessingPopover" class="local-processing-popover" role="dialog" aria-label="Local processing" data-i18n-aria="badge.popover" hidden>

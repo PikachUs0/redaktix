@@ -41,6 +41,14 @@ const SUPPORTED_MARKETED = [
     evidence: [/extractCreditCardCandidates|passesLuhn/, /["']credit_card["']/],
   },
   {
+    name: "ssn",
+    evidence: [/extractSsnCandidates|isValidSsn/, /["']ssn["']/],
+  },
+  {
+    name: "routing_number",
+    evidence: [/extractRoutingNumberCandidates|isValidAbaRoutingNumber/, /["']routing_number["']/],
+  },
+  {
     name: "person_name",
     evidence: [/extractPersonNameCandidates/, /["']person_name["']/],
   },
@@ -96,7 +104,6 @@ const SUPPORTED_MARKETED = [
  */
 const UNSUPPORTED_MARKETED = [
   { name: "license_plate", pattern: /\blicen[cs]e\s+plates?\b/i },
-  { name: "ssn", pattern: /\bSSNs?\b/ },
   { name: "qr_barcode", pattern: /\bQR\s*codes?\b|\bbarcodes?\b|\bQR\s*kod/i },
   { name: "faces", pattern: /\bFaces\b|\bBiometric facial\b|\bYüzler\b|\bbiyometrik yüz\b/i },
 ];
@@ -163,7 +170,6 @@ describe("marketed detectors match sensitive-detectors.js", () => {
       const implementedHints = {
         passport: /passport/i,
         license_plate: /license.?plate|plaka/i,
-        ssn: /\bSSN\b|social.?security/i,
         qr_barcode: /\bQR\b|barcode/i,
         faces: /facial|face.?detect|biometr/i,
         private_keys: /PRIVATE KEY|ssh-rsa|BEGIN (?:RSA |EC |OPENSSH )?PRIVATE/i,
@@ -174,7 +180,7 @@ describe("marketed detectors match sensitive-detectors.js", () => {
       const hint = implementedHints[claim.name];
       // Only treat as implemented if it looks like a detector, not a comment/string in tests.
       // sensitive-detectors must not define these as detector types.
-      if (hint && /type:\s*["'](?:passport|license_plate|ssn|qr|face|private_key|bearer|env|seed)/.test(DETECTORS_SRC)) {
+      if (hint && /type:\s*["'](?:passport|license_plate|qr|face|private_key|bearer|env|seed)/.test(DETECTORS_SRC)) {
         continue;
       }
       for (const surface of surfaces) {

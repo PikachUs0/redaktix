@@ -2846,6 +2846,25 @@ html[data-theme="dark"] .export-menu {
   color: #a7f3d0;
 }
 
+.review-bmac {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-color: rgba(250, 204, 21, 0.45);
+  background: rgba(120, 53, 15, 0.35);
+  color: #fde68a;
+  text-decoration: none;
+}
+
+.review-bmac .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.review-bmac:hover {
+  background: rgba(120, 53, 15, 0.55);
+  color: #fef3c7;
+}
+
 .review-export-dialog {
   position: fixed;
   inset: 0;
@@ -3208,6 +3227,29 @@ html[data-theme="dark"] .export-menu {
   font-family: "Geist", system-ui, sans-serif;
   font-size: 13px;
   line-height: 1.5;
+}
+
+.review-complete-card .review-complete-local {
+  color: #6ee7b7;
+  font-size: 12px;
+}
+
+.adsense-success-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 90px;
+  margin-top: 4px;
+  border: 1px dashed rgba(148, 163, 184, 0.45);
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-sizing: border-box;
 }
 
 #reviewRedactButton,

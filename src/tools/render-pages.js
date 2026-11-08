@@ -49,6 +49,9 @@ export function renderToolPage(entry, options = {}) {
     .map((item) => `<li><a href="${escapeHtml(toolPublicPath(item))}">${escapeHtml(item.h1)}</a></li>`)
     .join("");
   const faqHtml = entry.faqList.map((item) => `<details class="tool-faq"><summary>${escapeHtml(item.question)}</summary><p>${escapeHtml(item.answer)}</p></details>`).join("");
+  const seoArticle = typeof entry.seoArticle === "string" && entry.seoArticle.trim()
+    ? `<article class="prose max-w-none mt-12">${entry.seoArticle}</article>`
+    : "";
   const webApp = {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -69,16 +72,17 @@ export function renderToolPage(entry, options = {}) {
       { "@type": "ListItem", position: 3, name: entry.h1, item: `${origin}${path}` },
     ],
   };
-  const body = `<header class="tool-header"><a class="tool-brand" href="/">Redaktix</a><a class="tool-trust" href="/security/">🟢 100% Local Processing (Zero Data Upload)</a></header>
+  const body = `<header class="tool-header" data-pwa-install-mount><a class="tool-brand" href="/">Redaktix</a><a class="tool-trust" href="/security/">🟢 100% Local Processing (Zero Data Upload)</a></header>
 <main class="tool-main" data-tool-slug="${escapeHtml(entry.slug)}">
 <h1>${escapeHtml(entry.h1)}</h1>
 <p class="tool-intro">${escapeHtml(entry.introText)}</p>
 <div class="tool-dropzone" data-tool-dropzone>
-<p>Drop screenshot here, press Ctrl+V to paste, or browse files</p>
-<label class="tool-file-label">Browse files<input id="toolFileInput" type="file" accept="image/png,image/jpeg,image/webp"></label>
+<p>Drop a PDF or screenshot here, press Ctrl+V to paste, or browse files</p>
+<label class="tool-file-label">Browse files<input id="toolFileInput" type="file" accept="application/pdf,image/png,image/jpeg,image/webp"></label>
 <p class="tool-drop-status" data-tool-status role="status"></p>
 </div>
 <pre class="tool-example">${escapeHtml(entry.exampleCodeOrImage)}</pre>
+${seoArticle}
 <section>
 <h2>${entry.lang === "tr" ? "Sorular" : "Questions"}</h2>
 ${faqHtml}
@@ -100,7 +104,7 @@ ${faqHtml}
 export function renderToolsIndex(options = {}) {
   const styleHref = options.styleHref || "/src/css/tool-page.css";
   const links = TOOLS.map((entry) => `<li><a href="${escapeHtml(toolPublicPath(entry))}">${escapeHtml(entry.h1)}</a><p>${escapeHtml(entry.introText)}</p></li>`).join("");
-  const body = `<header class="tool-header"><a class="tool-brand" href="/">Redaktix</a><a class="tool-trust" href="/security/">🟢 100% Local Processing (Zero Data Upload)</a></header>
+  const body = `<header class="tool-header" data-pwa-install-mount><a class="tool-brand" href="/">Redaktix</a><a class="tool-trust" href="/security/">🟢 100% Local Processing (Zero Data Upload)</a></header>
 <main class="tool-main">
 <h1>Screenshot redaction tools</h1>
 <p class="tool-intro">Each tool opens Redaktix with one detector preset. OCR stays in the browser and starts only after you drop, paste, or select a screenshot.</p>
@@ -120,7 +124,7 @@ export function renderToolsIndex(options = {}) {
 
 export function renderSecurityPage(options = {}) {
   const styleHref = options.styleHref || "/src/css/tool-page.css";
-  const body = `<header class="tool-header"><a class="tool-brand" href="/">Redaktix</a><a class="tool-trust" href="/security/">🟢 100% Local Processing (Zero Data Upload)</a></header>
+  const body = `<header class="tool-header" data-pwa-install-mount><a class="tool-brand" href="/">Redaktix</a><a class="tool-trust" href="/security/">🟢 100% Local Processing (Zero Data Upload)</a></header>
 <main class="tool-main">
 <h1>Local-first processing</h1>
 <p class="tool-intro">Redaktix reads a screenshot with Tesseract.js compiled to WebAssembly in this browser. The image pixels and the recognized text stay in tab memory. They are not copied into a request body and they do not leave the browser.</p>

@@ -773,6 +773,8 @@ export function buildDetectionReview({
   envSecretShort = false,
   passportUnlabeled = false,
   seedPhraseReview = false,
+  ssnUnlabeled = false,
+  routingUnlabeled = false,
 } = {}) {
   const ocrConfidence = Number(confidence);
   const safeConfidence = Number.isFinite(ocrConfidence) ? ocrConfidence : null;
@@ -785,16 +787,18 @@ export function buildDetectionReview({
   const customIdNeedsReview = Boolean(customIdReview);
   const shortEnvSecret = Boolean(envSecretShort) || (type === "env_secret" && String(text || "").length < 8);
   const unlabeledPassport = Boolean(passportUnlabeled);
+  const unlabeledSsn = Boolean(ssnUnlabeled);
+  const unlabeledRouting = Boolean(routingUnlabeled);
   const seedNeedsReview = Boolean(seedPhraseReview) || type === "seed_phrase";
   let validation = "unverified";
-  if (unlabeledVkn || ibanUnverified || customIdNeedsReview || shortEnvSecret || unlabeledPassport || seedNeedsReview) {
+  if (unlabeledVkn || ibanUnverified || customIdNeedsReview || shortEnvSecret || unlabeledPassport || unlabeledSsn || unlabeledRouting || seedNeedsReview) {
     validation = "unverified";
-  } else if (ibanPassedChecksum || type === "credit_card" || (type === "tckn" && !checksumFailed)) validation = "checksum";
+  } else if (ibanPassedChecksum || type === "credit_card" || type === "routing_number" || (type === "tckn" && !checksumFailed)) validation = "checksum";
   else if (ibanFailedChecksum) validation = "unverified";
   else if (type === "person_name" || type === "location" || checksumFailed || carrierSkipped) validation = "contextual";
   else if ([
     "email", "phone", "ipv4", "ipv6", "vkn", "api_token", "session_id", "custom_rule",
-    "env_secret", "passport", "bearer_token", "connection_url", "private_key",
+    "env_secret", "passport", "bearer_token", "connection_url", "private_key", "ssn",
   ].includes(type)) validation = "pattern";
 
   const warnings = [];
@@ -809,6 +813,12 @@ export function buildDetectionReview({
   }
   if (unlabeledPassport) {
     warnings.push("Passport-like value without a Passport/Pasaport label. Confirm before redacting.");
+  }
+  if (unlabeledSsn) {
+    warnings.push("9-digit number without an SSN label. Confirm before redacting.");
+  }
+  if (unlabeledRouting) {
+    warnings.push("Routing-number prefix matched, but the ABA checksum did not. Confirm before redacting.");
   }
   if (seedNeedsReview) {
     warnings.push("Possible seed phrase. Review carefully before redacting.");
@@ -848,9 +858,9 @@ export function buildDetectionReview({
     truncated: credentialTruncated,
     warnings,
   };
-  if (ibanUnverified || unlabeledVkn || customIdNeedsReview || shortEnvSecret || unlabeledPassport || seedNeedsReview) {
+  if (ibanUnverified || unlabeledVkn || customIdNeedsReview || shortEnvSecret || unlabeledPassport || unlabeledSsn || unlabeledRouting || seedNeedsReview) {
     review.needsReview = true;
-    if (ibanUnverified || customIdNeedsReview || shortEnvSecret || unlabeledPassport || seedNeedsReview) {
+    if (ibanUnverified || customIdNeedsReview || shortEnvSecret || unlabeledPassport || unlabeledSsn || unlabeledRouting || seedNeedsReview) {
       review.patternMatched = true;
     }
     if (unlabeledVkn) review.lowConfidence = true;
@@ -1857,6 +1867,137 @@ export function extractCreditCardCandidates(value) {
 
 export function detectCreditCard(value, bbox) {
   return extractCreditCardCandidates(value).map((text) => asDetection(text, "credit_card", 0.93, bbox));
+}
+
+/** --- US Social Security Number (SSN) --- */
+
+const SSN_FORMATTED = /(?<!\d)(\d{3})[-\s\u2013\u2014](\d{2})[-\s\u2013\u2014](\d{4})(?!\d)/g;
+const SSN_BARE = /(?<!\d)(\d{9})(?!\d)/g;
+const SSN_LABEL_WINDOW = 32;
+
+export function isValidSsn(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (!/^\d{9}$/.test(digits)) return false;
+  const area = Number(digits.slice(0, 3));
+  const group = Number(digits.slice(3, 5));
+  const serial = Number(digits.slice(5));
+  if (area === 0 || area === 666 || area >= 900) return false;
+  if (group === 0) return false;
+  if (serial === 0) return false;
+  return true;
+}
+
+function ssnLabelPrecedes(source, index) {
+  const before = foldTurkish(String(source || "").slice(Math.max(0, index - SSN_LABEL_WINDOW), index));
+  return /(?:^|[^a-z])(?:ssn|social\s*security|soc\.?\s*sec)\b/.test(before);
+}
+
+/**
+ * Returns formatted SSNs as strings, and bare (unlabeled) 9-digit SSNs as
+ * review-only objects `{ text, needsReview: true }`.
+ */
+export function extractSsnCandidates(value) {
+  const source = String(value || "");
+  const kept = [];
+  const review = [];
+  const consumed = [];
+  const overlaps = (start, end) => consumed.some(([from, to]) => start < to && end > from);
+
+  for (const found of source.matchAll(SSN_FORMATTED)) {
+    const digits = found[0].replace(/\D/g, "");
+    if (!isValidSsn(digits)) continue;
+    consumed.push([found.index, found.index + found[0].length]);
+    kept.push(found[0]);
+  }
+
+  for (const found of source.matchAll(SSN_BARE)) {
+    const digits = found[0];
+    if (overlaps(found.index, found.index + digits.length)) continue;
+    if (!isValidSsn(digits)) continue;
+    consumed.push([found.index, found.index + digits.length]);
+    if (ssnLabelPrecedes(source, found.index)) kept.push(digits);
+    else review.push({ text: digits, needsReview: true });
+  }
+
+  const out = unique(kept);
+  for (const item of review) {
+    if (!out.includes(item.text)) out.push(item);
+  }
+  return out;
+}
+
+export function detectSsn(value, bbox) {
+  return extractSsnCandidates(value).map((candidate) => {
+    const text = typeof candidate === "string" ? candidate : candidate.text;
+    const needsReview = Boolean(candidate && typeof candidate === "object" && candidate.needsReview);
+    const detection = asDetection(text, "ssn", needsReview ? 0.5 : 0.9, bbox);
+    if (needsReview) {
+      detection.review = buildDetectionReview({ type: "ssn", text, ssnUnlabeled: true });
+    }
+    return detection;
+  });
+}
+
+/** --- US ABA bank routing number --- */
+
+const ROUTING_BARE = /(?<!\d)(\d{9})(?!\d)/g;
+const ROUTING_LABEL_WINDOW = 32;
+const ROUTING_PREFIX_RANGES = [[0, 12], [21, 32], [61, 72], [80, 80]];
+
+export function hasAbaRoutingPrefix(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (!/^\d{9}$/.test(digits)) return false;
+  const prefix = Number(digits.slice(0, 2));
+  return ROUTING_PREFIX_RANGES.some(([low, high]) => prefix >= low && prefix <= high);
+}
+
+export function isValidAbaRoutingNumber(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (!hasAbaRoutingPrefix(digits)) return false;
+  const [d1, d2, d3, d4, d5, d6, d7, d8, d9] = digits.split("").map(Number);
+  const checksum = 3 * (d1 + d4 + d7) + 7 * (d2 + d5 + d8) + (d3 + d6 + d9);
+  return checksum % 10 === 0;
+}
+
+function routingLabelPrecedes(source, index) {
+  const before = foldTurkish(String(source || "").slice(Math.max(0, index - ROUTING_LABEL_WINDOW), index));
+  return /(?:^|[^a-z])(?:routing|rtn|aba|ach)\b/.test(before);
+}
+
+/**
+ * Returns checksum-valid ABA routing numbers as strings, and prefix-only
+ * (checksum-failed, labeled) matches as review-only objects.
+ */
+export function extractRoutingNumberCandidates(value) {
+  const source = String(value || "");
+  const kept = [];
+  const review = [];
+  for (const found of source.matchAll(ROUTING_BARE)) {
+    const digits = found[0];
+    if (!hasAbaRoutingPrefix(digits)) continue;
+    if (isValidAbaRoutingNumber(digits)) {
+      kept.push(digits);
+      continue;
+    }
+    if (routingLabelPrecedes(source, found.index)) review.push({ text: digits, needsReview: true });
+  }
+  const out = unique(kept);
+  for (const item of review) {
+    if (!out.includes(item.text)) out.push(item);
+  }
+  return out;
+}
+
+export function detectRoutingNumber(value, bbox) {
+  return extractRoutingNumberCandidates(value).map((candidate) => {
+    const text = typeof candidate === "string" ? candidate : candidate.text;
+    const needsReview = Boolean(candidate && typeof candidate === "object" && candidate.needsReview);
+    const detection = asDetection(text, "routing_number", needsReview ? 0.5 : 0.85, bbox);
+    if (needsReview) {
+      detection.review = buildDetectionReview({ type: "routing_number", text, routingUnlabeled: true });
+    }
+    return detection;
+  });
 }
 
 /** Common English stopwords — windows dominated by these are almost never seed phrases. */

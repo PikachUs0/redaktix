@@ -28,6 +28,8 @@ const SINGLE_MODE_DETECTORS = [
   "person_name",
   "location",
   "session_id",
+  "ssn",
+  "routing_number",
   "custom_rule",
 ];
 
