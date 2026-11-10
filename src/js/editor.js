@@ -8052,6 +8052,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="material-symbols-outlined" aria-hidden="true">verified</span>
             <p data-i18n="editor.readyBody">${escapeHtml(t("editor.readyBody"))}</p>
             <p class="review-complete-local">Processed 100% locally in your browser. No upload, no server — the file and its details never leave this device.</p>
+            <a class="review-verify-link" href="/verify/" target="_blank" rel="noopener noreferrer" data-i18n="editor.verifyLink">Verify it yourself</a>
             <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
             <div class="rdx-ad-slot" data-rdx-ad-slot="export" hidden></div>
           </div>

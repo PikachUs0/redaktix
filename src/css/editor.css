@@ -3234,6 +3234,20 @@ html[data-theme="dark"] .export-menu {
   font-size: 12px;
 }
 
+.review-verify-link {
+  color: #93c5fd;
+  font-family: "Geist", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.review-verify-link:hover,
+.review-verify-link:focus-visible {
+  color: #bfdbfe;
+}
+
 /* Ad slot: only ever populated by src/ads/adguard.js, and only after the
    privacy gate says yes. Kept far below the Download / "Redact another"
    actions with generous whitespace, never next to a button or the canvas. */

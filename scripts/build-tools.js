@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { renderedPages, renderSitemap } from "../src/tools/render-pages.js";
@@ -35,8 +35,23 @@ export function writeToolPages(targetDir = dist, env = process.env) {
   writeFileSync(resolve(targetDir, "sitemap.xml"), renderSitemap(env));
 }
 
+/**
+ * Vite emits the /verify/ MPA input at dist/src/verify/index.html because the
+ * source lives under src/. Its asset URLs are root-absolute (/assets/...), so
+ * move it to the public path it was registered under: dist/verify/index.html.
+ */
+export function moveVerifyPage(targetDir = dist) {
+  const source = resolve(targetDir, "src/verify/index.html");
+  if (!existsSync(source)) return false;
+  const file = resolve(targetDir, "verify/index.html");
+  mkdirSync(dirname(file), { recursive: true });
+  renameSync(source, file);
+  return true;
+}
+
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   writeToolPages();
+  moveVerifyPage();
   const precache = writeServiceWorker(dist);
   console.log(`service worker ${precache.cacheName} (${precache.count} urls)`);
 }

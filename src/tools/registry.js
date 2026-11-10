@@ -260,7 +260,7 @@ export function getToolBySlug(slug) {
 }
 
 export function sitemapPaths() {
-  return ["/", "/security/", "/tools/", ...TOOLS.map((item) => toolPublicPath(item))];
+  return ["/", "/security/", "/verify/", "/tools/", ...TOOLS.map((item) => toolPublicPath(item))];
 }
 
 export function resolveSiteOrigin(env = globalThis.process?.env || {}) {

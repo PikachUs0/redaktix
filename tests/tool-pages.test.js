@@ -63,13 +63,14 @@ describe("tool registry", () => {
     assert.match(index, /href="\/tr\/tckn-gizle\/"/);
   });
 
-  it("builds a sitemap for the home page, security page, tool hub, and every tool", () => {
+  it("builds a sitemap for the home page, security page, verify page, tool hub, and every tool", () => {
     const xml = renderSitemap({ REDAKTIX_ORIGIN: "https://example.test" });
     for (const path of sitemapPaths()) {
       assert.match(xml, new RegExp(`<loc>https://example.test${path.replaceAll("/", "\\/")}<\\/loc>`));
     }
     assert.equal(sitemapPaths().includes("/"), true);
     assert.equal(sitemapPaths().includes("/security/"), true);
+    assert.equal(sitemapPaths().includes("/verify/"), true);
     assert.equal(sitemapPaths().includes("/tools/"), true);
   });
 

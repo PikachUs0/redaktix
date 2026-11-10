@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { renderedPages, renderSitemap } from "./src/tools/render-pages.js";
 import { writeServiceWorker } from "./scripts/write-sw.js";
@@ -12,6 +13,14 @@ function toolPagesDevPlugin() {
         if (url === "/sitemap.xml") {
           response.setHeader("Content-Type", "application/xml; charset=utf-8");
           response.end(renderSitemap());
+          return;
+        }
+        // /verify/ is a Vite MPA input. In dev the file lives under src/,
+        // so serve the source HTML at the public URL; its asset links are
+        // root-absolute (/src/...), which Vite serves directly.
+        if (url === "/verify" || url === "/verify/") {
+          response.setHeader("Content-Type", "text/html; charset=utf-8");
+          response.end(readFileSync(resolve(import.meta.dirname, "src/verify/index.html"), "utf8"));
           return;
         }
         const normalized = url.endsWith("/") ? url : `${url}/`;
@@ -63,6 +72,11 @@ export default defineConfig({
         editor: resolve(
           import.meta.dirname,
           "editor.html"
+        ),
+
+        verify: resolve(
+          import.meta.dirname,
+          "src/verify/index.html"
         ),
 
         toolPage: resolve(

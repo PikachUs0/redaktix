@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify It Yourself: Redaktix Never Uploads Your Files</title>
+<meta name="description" content="Three ways to prove Redaktix processes your documents locally: an airplane-mode test, a Chrome DevTools network check, and our Content Security Policy.">
+<link rel="canonical" href="https://redaktix.com/verify/">
+<link rel="stylesheet" href="/src/css/tool-page.css">
+<link rel="stylesheet" href="/src/verify/verify.css">
+</head>
+<body>
+<header class="tool-header" data-pwa-install-mount><a class="tool-brand" href="/">Redaktix</a><a class="tool-trust" href="/security/">🟢 100% Local Processing (Zero Data Upload)</a></header>
+
+<main class="tool-main verify-main">
+<nav class="tool-nav" aria-label="Redaktix pages">
+  <a href="/">Home</a>
+  <a href="/tools/">Tools</a>
+  <a href="/security/">Security</a>
+  <a href="/verify/" aria-current="page">Verify</a>
+</nav>
+
+  <h1>Don’t trust us. Check.</h1>
+  <p class="lede">Redaktix removes sensitive data from PDFs and images inside your browser. Your files are never uploaded. That’s a claim, so here are three ways to test it yourself, easiest first. None needs technical skill, and each takes a few minutes.</p>
+
+  <aside class="note">
+    <strong>Test with a fake document.</strong> Make a throwaway PDF or screenshot containing a made-up number like 123-45-6789. You’ll see exactly the same behavior without risking anything real.
+  </aside>
+
+  <nav class="toc" aria-label="On this page">
+    <a href="#airplane">1. Airplane-mode test</a>
+    <a href="#network">2. Network-tab test</a>
+    <a href="#csp">3. Security policy and architecture</a>
+    <a href="#limits">What this doesn’t prove</a>
+  </nav>
+
+  <section id="airplane">
+    <h2>1. Airplane-mode test</h2>
+    <p>If Redaktix needs no internet to work, it can’t be sending your file anywhere while you use it.</p>
+    <ol class="steps">
+      <li>Open <a href="/tools/redact-ssn-pdf/">any Redaktix tool</a> and leave it open for about 30 seconds on your first visit. The app is saving itself, including its text-recognition engine, to your device.</li>
+      <li>Turn on airplane mode or disconnect from Wi-Fi. (On a computer you can also use DevTools: Network tab, then set “No throttling” to <em>Offline</em>.)</li>
+      <li>Reload the page. It should still open, served from your device.</li>
+      <li>Add your fake document, review the detected items, and export. It should work exactly as before.</li>
+    </ol>
+    <details>
+      <summary>Phone instructions</summary>
+      <p><strong>iPhone/iPad:</strong> in Safari, tap Share, then Add to Home Screen. Open it from there once while online, then switch on airplane mode and open it again.</p>
+      <p><strong>Android:</strong> in Chrome, open the menu and choose Install app. Open it once online, then switch on airplane mode and open it again.</p>
+    </details>
+    <p class="proves"><strong>What this proves:</strong> processing doesn’t depend on a server. <strong>What it doesn’t:</strong> it says nothing about what happens while you’re online. Test 2 covers that.</p>
+  </section>
+
+  <section id="network">
+    <h2>2. Network-tab test</h2>
+    <p>Your browser records every network request a page makes. Watch it while Redaktix processes a file, and you’ll see for yourself that your document isn’t in any of them.</p>
+    <ol class="steps">
+      <li>For a clean result, open a <strong>private/incognito window</strong>. Browser extensions are usually off there, and they can make their own requests that would muddy the test.</li>
+      <li>Go to a Redaktix tool, then open DevTools: <kbd>F12</kbd> or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>I</kbd> on Windows/Linux, <kbd>Cmd</kbd>+<kbd>Option</kbd>+<kbd>I</kbd> on Mac. Click the <strong>Network</strong> tab.</li>
+      <li>Tick <strong>Preserve log</strong>, make sure the filter is set to <strong>All</strong>, then click the clear button (the circle with a line through it) so the list starts empty.</li>
+      <li>Add your fake document, run detection, edit the boxes, and export.</li>
+      <li>Read the list. No request should carry your document. The app’s own files may appear: entries marked <code>(service worker)</code> or <code>(memory cache)</code>, and, on a first visit, same-origin requests under <code>/assets/ocr/</code> that fetch the text-recognition engine and language data.</li>
+      <li>To be thorough, type <code>method:POST</code> in the filter box. An upload would show up here. The list should be empty. Then check the summary at the bottom of the panel: it should show very little or nothing transferred.</li>
+      <li>If anything does appear, click it. The <strong>Headers</strong> tab shows where it went, <strong>Payload</strong> shows what was sent, and <strong>Initiator</strong> shows which code sent it.</li>
+    </ol>
+    <aside class="note">
+      <strong>About ads.</strong> Redaktix is free and may show ads on some pages. This page never does, and adding <code>?privacy_mode=true</code> to any Redaktix URL turns ads off entirely so you can run this test with no ad-network traffic in the way. Ad requests never contain your documents, but we’d rather you not have to take our word for that either.
+    </aside>
+    <p class="proves"><strong>Want to go further?</strong> A network monitor such as Wireshark or Little Snitch sees traffic outside the browser too.</p>
+  </section>
+
+  <section id="csp">
+    <h2>3. Security policy and architecture</h2>
+    <h3>The browser enforces our promise</h3>
+    <p>A Content Security Policy (CSP) is a rule list our host sends with each page. The browser, not us, enforces it. Our policy tells the browser it may only talk to Redaktix itself, so even a bug or compromised script on the page couldn’t post your file to another site.</p>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>Directive</th><th>Plain meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>default-src 'self'</code></td><td>Load nothing from other sites unless a rule below allows it.</td></tr>
+        <tr><td><code>connect-src 'self'</code></td><td>The page can only make requests back to redaktix.com. This is the rule that blocks uploads to anywhere else.</td></tr>
+        <tr><td><code>script-src 'self' 'wasm-unsafe-eval'</code></td><td>Only our own scripts run, plus WebAssembly, which our text recognition needs.</td></tr>
+        <tr><td><code>worker-src 'self' blob:</code></td><td>Processing runs in background workers we ship.</td></tr>
+        <tr><td><code>form-action 'none'</code></td><td>No form on the page can post data anywhere.</td></tr>
+        <tr><td><code>object-src 'none'</code></td><td>No plugins or embedded objects.</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p>The table is a summary. Here is what your browser actually receives right now:</p>
+    <p class="row">
+      <label for="csp-route">Page</label>
+      <select id="csp-route">
+        <option value="/verify/">/verify/</option>
+        <option value="/tools/redact-ssn-pdf/">/tools/redact-ssn-pdf/</option>
+        <option value="/tools/anonymize-w2-tax-form/">/tools/anonymize-w2-tax-form/</option>
+        <option value="/tools/blur-routing-number/">/tools/blur-routing-number/</option>
+      </select>
+      <button type="button" id="csp-btn">Show live policy</button>
+    </p>
+    <pre id="csp-out" aria-live="polite">Choose a page and press the button. This makes one request to our own site, for headers only.</pre>
+
+    <h3>What happens to your file</h3>
+    <ol class="flow">
+      <li><strong>You choose a file.</strong> It’s read into your browser’s memory. No request is made.</li>
+      <li><strong>Pages are drawn on a canvas</strong>, a drawing surface inside your browser.</li>
+      <li><strong>Text recognition (OCR) runs as WebAssembly</strong> in a background worker on your device.</li>
+      <li><strong>Detectors flag candidates:</strong> SSN-shaped numbers checked against the official validity rules, routing numbers checked against the ABA checksum, and card numbers checked with the Luhn checksum.</li>
+      <li><strong>You review every box.</strong> Nothing is final until you approve it.</li>
+      <li><strong>Export burns the redactions into the page pixels.</strong> The exported file contains images of the pages, so there is no hidden text underneath the black boxes. Original metadata is not carried over.</li>
+      <li><strong>The download is created on your device</strong> and handed to your browser’s download manager. <strong>Clear session</strong> in the export panel drops the image and the recognized text from memory; closing the tab also discards them.</li>
+    </ol>
+    <p>Because export flattens each page, the result is no longer searchable. That is the trade for being unrecoverable.</p>
+  </section>
+
+  <section id="limits">
+    <h2>What this doesn’t prove</h2>
+    <ul>
+      <li>It can’t detect a compromised device or a malicious browser extension. Use a private window as described above.</li>
+      <li>You’re trusting the code we ship. The footer shows the exact build you’re running, so an unexpected change is visible, and the policy above limits what any script on the page can talk to.</li>
+      <li>Automatic detection can miss things, especially on blurry scans or handwriting. Always look over the result before you share it.</li>
+    </ul>
+    <p>Found a way to make Redaktix leak data? Please contact us before disclosing it publicly.</p>
+  </section>
+</main>
+
+<footer class="tool-footer">
+  <a href="/">Home</a>
+  <a href="/tools/">Tools</a>
+  <a href="/security/">Security</a>
+  <span id="build" class="build" data-sha=""></span>
+</footer>
+<script type="module" src="/src/verify/verify.js"></script>
+</body>
+</html>
