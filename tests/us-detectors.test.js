@@ -3,13 +3,16 @@ import { describe, it } from "node:test";
 import {
   buildDetectionReview,
   detectionsForAutomaticRedaction,
+  detectCreditCard,
   detectRoutingNumber,
   detectSsn,
+  extractCreditCardCandidates,
   extractRoutingNumberCandidates,
   extractSsnCandidates,
   hasAbaRoutingPrefix,
   isValidAbaRoutingNumber,
   isValidSsn,
+  passesLuhn,
 } from "../src/js/sensitive-detectors.js";
 
 const VALID_SSN = "123-45-6789";
@@ -28,6 +31,24 @@ describe("US SSN detector", () => {
     assert.equal(isValidSsn("123-00-6789"), false);
     assert.equal(isValidSsn("123-45-0000"), false);
     assert.equal(isValidSsn("12345"), false);
+  });
+
+  it("accepts every separator the formatter tolerates and still rejects bad structure", () => {
+    assert.equal(isValidSsn("123 45 6789"), true);
+    assert.equal(isValidSsn("123\u201345\u20146789"), true);
+    assert.equal(isValidSsn("123\u201445\u20146789"), true);
+    assert.equal(isValidSsn("001-01-0001"), true);
+    assert.equal(isValidSsn("899-99-9999"), true);
+    assert.equal(isValidSsn("999-45-6789"), false);
+    assert.equal(isValidSsn("123 45 0000"), false);
+  });
+
+  it("drops formatted SSN-shaped values that fail the validity rules", () => {
+    assert.deepEqual(extractSsnCandidates("SSN 000-45-6789"), []);
+    assert.deepEqual(extractSsnCandidates("SSN 123-00-6789"), []);
+    assert.deepEqual(extractSsnCandidates("SSN 123-45-0000"), []);
+    assert.deepEqual(extractSsnCandidates("SSN 900-45-6789"), []);
+    assert.deepEqual(extractSsnCandidates("SSN 666-45-6789"), []);
   });
 
   it("accepts hyphenated SSNs as strings", () => {
@@ -83,6 +104,48 @@ describe("US ABA routing number detector", () => {
     const labeled = extractRoutingNumberCandidates(`Routing number ${INVALID_ROUTING}`);
     assert.equal(labeled.length, 1);
     assert.equal(labeled[0].needsReview, true);
+  });
+
+  it("uses the 3-7-1 weighted mod-10 checksum", () => {
+    const weighted = (value) => {
+      const digits = String(value).split("").map(Number);
+      return 3 * (digits[0] + digits[3] + digits[6])
+        + 7 * (digits[1] + digits[4] + digits[7])
+        + 1 * (digits[2] + digits[5] + digits[8]);
+    };
+    for (const routing of [VALID_ROUTING, VALID_ROUTING_2, "121000358", "322271627"]) {
+      assert.equal(isValidAbaRoutingNumber(routing), true, routing);
+      assert.equal(weighted(routing) % 10, 0, routing);
+    }
+    for (const routing of ["021000022", "121000359", "322271628"]) {
+      assert.equal(isValidAbaRoutingNumber(routing), false, routing);
+      assert.notEqual(weighted(routing) % 10, 0, routing);
+    }
+  });
+});
+
+describe("Luhn card checksum", () => {
+  it("accepts only numbers whose check digit satisfies Luhn", () => {
+    assert.equal(passesLuhn("4242 4242 4242 4242"), true);
+    assert.equal(passesLuhn("4111111111111111"), true);
+    assert.equal(passesLuhn("5555555555554444"), true);
+    assert.equal(passesLuhn("4242424242424241"), false);
+    assert.equal(passesLuhn("1234567812345678"), false);
+  });
+
+  it("rejects values outside the 13-19 digit range", () => {
+    assert.equal(passesLuhn("424242424242"), false);
+    assert.equal(passesLuhn("42424242424242424242"), false);
+  });
+
+  it("drops card-shaped values that fail Luhn or repeat one digit", () => {
+    assert.deepEqual(extractCreditCardCandidates("4242 4242 4242 4241"), []);
+    assert.equal(passesLuhn("8888 8888 8888 8888"), true);
+    assert.deepEqual(extractCreditCardCandidates("8888 8888 8888 8888"), []);
+    const detections = detectCreditCard("Card 4242 4242 4242 4242");
+    assert.equal(detections.length, 1);
+    assert.equal(detections[0].type, "credit_card");
+    assert.equal(buildDetectionReview({ type: "credit_card", text: "4242 4242 4242 4242" }).validation, "checksum");
   });
 });
 

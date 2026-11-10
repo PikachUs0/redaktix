@@ -110,13 +110,14 @@ export const TOOLS = Object.freeze([
     faqList: [
       { question: "Is my PDF uploaded to a server?", answer: "No. Redaktix reads the page in your browser with WebAssembly OCR. The PDF bytes and the recognized text stay in this tab." },
       { question: "Can I redact an SSN on a scanned page?", answer: "Yes. Drop a PNG or JPEG scan instead of the PDF and the local editor highlights the values so you can cover them before export." },
+      { question: "How does Redaktix decide an SSN is valid?", answer: "SSNs have no check digit, so Redaktix applies the official validity rules: the area number cannot be 000, 666, or 900-999, the group number cannot be 00, and the serial number cannot be 0000." },
     ],
     seoArticle: `<h2>How to Redact SSN from PDFs Locally</h2>
 <p>Redacting a Social Security number from a PDF should not mean handing your tax document to a stranger's server. Redaktix redacts an SSN from a PDF entirely inside your browser: the page is rendered, read with WebAssembly OCR, and covered with a permanent redaction box before it is exported. The document is never uploaded, emailed, or stored in the cloud.</p>
 <ol>
 <li><strong>Drop the PDF.</strong> Use the drop area above to select a PDF, drop it onto the page, or paste a screenshot of the form. A scanned PNG or JPEG works too.</li>
 <li><strong>Let local OCR read the page.</strong> Tesseract.js runs as WebAssembly on this device and returns the recognized text. Nothing leaves the tab.</li>
-<li><strong>Review each SSN candidate.</strong> The SSN detector matches the 123-45-6789 pattern, tolerates spaces and hyphens, and uses nearby labels such as "SSN", "Social Security", or "Taxpayer ID" to catch bare nine-digit blocks.</li>
+<li><strong>Review each SSN candidate.</strong> The SSN detector matches the 123-45-6789 pattern, tolerates spaces and hyphens, and applies the official validation rules — area not 000, 666, or 900-999, group not 00, serial not 0000. There is no check digit to verify, so structure is what gets validated. It also uses nearby labels such as "SSN", "Social Security", or "Taxpayer ID" to catch bare nine-digit blocks.</li>
 <li><strong>Redact or blur.</strong> Draw a solid black bar or choose a blur style over every highlighted value, then export a flattened image or PDF you can share safely.</li>
 </ol>
 <h2>What Redaktix Detects in a US Tax PDF</h2>
