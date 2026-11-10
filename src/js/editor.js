@@ -48,7 +48,11 @@ import { loadOcrModule, ocrModuleRequested } from "./ocr-loader.js";
 import { sameTcknGlyph, spatiallyDuplicate } from "./ocr-adaptive.js";
 import { getToolBySlug } from "../tools/registry.js";
 import { takePendingToolFile } from "./tool-handoff.js";
-import { canvasToBlob, createCleanOutputCanvas as buildCleanOutputCanvas } from "./export-clean.js";
+import {
+  canvasToBlob,
+  createCleanOutputCanvas as buildCleanOutputCanvas,
+  createRedactedFileName,
+} from "./export-clean.js";
 let activeRedaktixEditor = null;
 
 export class RedaktixEditor {
@@ -112,7 +116,6 @@ import {
 import {
   createRedactedPdfFileName,
   exportRedactedPdf,
-  PDF_EXPORT_MODES,
 } from "../lib/pdfExport.js";
 
 try {
@@ -205,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
     compareSplit: 0.5,
     exportFormat: "png",
     exportQuality: 0.92,
-    pdfExportMode: PDF_EXPORT_MODES.FLATTEN,
     isExportingPdf: false,
     pinchGesture: null,
     reviewActive: false,
@@ -490,10 +492,29 @@ document.addEventListener("DOMContentLoaded", () => {
     renderSensitiveDataPanel();
   }
 
-  async function startNewRedaction() {
+  /** Drop the source bitmap so its pixel buffer can be reclaimed. */
+  function releaseEditorImage() {
+    const image = editorState.image;
+    if (image) {
+      try {
+        image.width = 0;
+        image.height = 0;
+      } catch {
+        // Ignore canvases that refuse resizing.
+      }
+    }
+    editorState.image = null;
+  }
+
+  /**
+   * "Clear session" / "Redact another": destroy the PDF session (workers and
+   * cached page canvases), revoke the source object URL, release the source
+   * bitmap, and reset every in-memory detection/redaction.
+   */
+  async function clearSession() {
     await destroyPdfSession();
     clearPreviousObjectUrl();
-    editorState.image = null;
+    releaseEditorImage();
     editorState.imageWidth = 0;
     editorState.imageHeight = 0;
     editorState.sourceName = null;
@@ -507,6 +528,10 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedFileMessage.classList.remove("is-error");
     }
     fileInput.value = "";
+  }
+
+  async function startNewRedaction() {
+    await clearSession();
   }
 
   async function loadPdfFile(file) {
@@ -8015,6 +8040,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="real-detection-panel-meta">
             <button id="reviewExportButton" class="review-action review-action-redact review-complete-download" type="button" data-i18n="editor.download">Download</button>
             <button id="reviewResetButton" class="review-action review-complete-reset" type="button">Redact another</button>
+            <button id="reviewClearSessionButton" class="review-action review-complete-clear" type="button">Clear session</button>
             <a id="buyMeCoffeeButton" class="review-action review-bmac" href="https://redaktix.com/support" target="_blank" rel="noopener noreferrer">
               <span class="material-symbols-outlined" aria-hidden="true">local_cafe</span>
               Buy Me a Coffee
@@ -8042,6 +8068,10 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("reviewResetButton")?.addEventListener("click", (event) => {
         event.preventDefault();
         void startNewRedaction();
+      });
+      document.getElementById("reviewClearSessionButton")?.addEventListener("click", (event) => {
+        event.preventDefault();
+        void clearSession();
       });
       document.getElementById("customRulesButton")?.addEventListener("click", openCustomRulesDialog);
       const adSlot = sensitiveDataPanel.querySelector('[data-rdx-ad-slot="export"]');
@@ -8627,14 +8657,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <p class="export-lossless-note" id="exportLosslessNote" data-i18n="editor.lossless">Lossless PNG</p>
       </div>
       <div id="exportPdfOptions" hidden>
-        <div class="export-pdf-mode-row" role="radiogroup" aria-label="PDF export mode">
-          <button type="button" class="export-format-option is-selected" data-pdf-export-mode="flatten" role="radio" aria-checked="true" data-i18n="editor.pdfFlatten">
-            Flatten / Hard Redact
-          </button>
-          <button type="button" class="export-format-option" data-pdf-export-mode="vector" role="radio" aria-checked="false" data-i18n="editor.pdfVector">
-            Vector overlay
-          </button>
-        </div>
         <p class="export-lossless-note" id="exportPdfModeNote" data-i18n="editor.pdfFlattenNote">
           Rasterizes pages so redacted text cannot be selected or extracted.
         </p>
@@ -8647,9 +8669,6 @@ document.addEventListener("DOMContentLoaded", () => {
     menu.addEventListener("click", (event) => event.stopPropagation());
     menu.querySelectorAll("[data-export-format]").forEach((button) => {
       button.addEventListener("click", () => selectExportFormat(button.dataset.exportFormat));
-    });
-    menu.querySelectorAll("[data-pdf-export-mode]").forEach((button) => {
-      button.addEventListener("click", () => selectPdfExportMode(button.dataset.pdfExportMode));
     });
     menu.querySelector("#exportQualitySlider")?.addEventListener("input", (event) => {
       editorState.exportQuality = clamp(Number(event.target.value), 0.6, 1);
@@ -8683,28 +8702,7 @@ document.addEventListener("DOMContentLoaded", () => {
         confirm.textContent = t("editor.exportImage");
       }
     }
-    if (isPdf) selectPdfExportMode(editorState.pdfExportMode || PDF_EXPORT_MODES.FLATTEN);
     applyI18n(menu);
-  }
-
-  function selectPdfExportMode(mode) {
-    const nextMode = mode === PDF_EXPORT_MODES.VECTOR
-      ? PDF_EXPORT_MODES.VECTOR
-      : PDF_EXPORT_MODES.FLATTEN;
-    editorState.pdfExportMode = nextMode;
-    document.querySelectorAll("[data-pdf-export-mode]").forEach((button) => {
-      const selected = button.dataset.pdfExportMode === nextMode;
-      button.classList.toggle("is-selected", selected);
-      button.setAttribute("aria-checked", String(selected));
-    });
-    const note = document.getElementById("exportPdfModeNote");
-    if (note) {
-      const key = nextMode === PDF_EXPORT_MODES.FLATTEN
-        ? "editor.pdfFlattenNote"
-        : "editor.pdfVectorNote";
-      note.setAttribute("data-i18n", key);
-      note.textContent = t(key);
-    }
   }
 
   function toggleExportMenu(anchor) {
@@ -9638,18 +9636,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const blob = await canvasToBlob(canvas, mimeType, quality);
       canvas.width = 0;
       canvas.height = 0;
-      const fileName = createCleanFileName(sourceName, exportFormat === "jpeg" ? "jpg" : exportFormat);
+      const fileName = createRedactedFileName(exportFormat === "jpeg" ? "jpg" : exportFormat);
       if (Capacitor.isNativePlatform()) {
         await saveImageToDevice(blob, fileName);
       } else {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        triggerBlobDownload(blob, fileName);
       }
       showStatus("Image exported with EXIF metadata stripped");
       trackEvent("redaction_downloaded");
@@ -9712,15 +9703,11 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const pdfBytes = await session.file.arrayBuffer();
       const redactionsByPage = collectPdfRedactionsByPage();
-      const mode = editorState.pdfExportMode === PDF_EXPORT_MODES.VECTOR
-        ? PDF_EXPORT_MODES.VECTOR
-        : PDF_EXPORT_MODES.FLATTEN;
 
       const bytes = await exportRedactedPdf({
         pdfBytes,
         redactionsByPage,
         scale: session.scale || PDF_DEFAULT_SCALE,
-        mode,
         onProgress: ({ page, pageCount, progress }) => {
           setPdfExportProgress({ visible: true, page, pageCount, progress });
         },
@@ -9747,24 +9734,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       const blob = new Blob([bytes], { type: "application/pdf" });
-      const fileName = createRedactedPdfFileName(sourceName);
+      const fileName = createRedactedPdfFileName();
       if (Capacitor.isNativePlatform()) {
         await saveImageToDevice(blob, fileName);
       } else {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        triggerBlobDownload(blob, fileName);
       }
-      showStatus(
-        mode === PDF_EXPORT_MODES.FLATTEN
-          ? "PDF exported with hard redaction (flattened pages)."
-          : "PDF exported with redaction overlays."
-      );
+      showStatus("PDF exported with hard redaction (flattened pages).");
       trackEvent("redaction_downloaded");
     } catch (error) {
       console.error("PDF export failed:", error);
@@ -9808,13 +9784,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function createCleanFileName(name, extension = "png") {
-    const safe = String(name || "screenshot")
-      .replace(/\.[^/.]+$/, "")
-      .replace(/[<>:\"/\\|?*\u0000-\u001F]/g, "-")
-      .trim();
-    const safeExtension = ["png", "webp", "jpg"].includes(extension) ? extension : "png";
-    return `${safe || "screenshot"}_redacted.${safeExtension}`;
+  /** Local downloads: create an object URL for the synthetic blob and always revoke it. */
+  function triggerBlobDownload(blob, fileName) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function activateEditorTool(

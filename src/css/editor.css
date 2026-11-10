@@ -3269,7 +3269,8 @@ html[data-theme="dark"] .export-menu {
   min-height: 90px;
 }
 
-.review-complete-reset {
+.review-complete-reset,
+.review-complete-clear {
   border-color: rgba(148, 163, 184, 0.45);
   background: rgba(15, 23, 42, 0.55);
   color: #e2e8f0;
@@ -3279,7 +3280,8 @@ html[data-theme="dark"] .export-menu {
 #reviewDismissButton,
 #reviewKeepButton,
 #reviewExportButton,
-#reviewResetButton {
+#reviewResetButton,
+#reviewClearSessionButton {
   min-width: 44px;
   min-height: 44px;
   touch-action: manipulation;
@@ -3777,7 +3779,8 @@ body > header .bg-primary-container {
   }
 
   #sensitiveDataPanel.is-review-complete .review-complete-download,
-  #sensitiveDataPanel.is-review-complete .review-complete-reset {
+  #sensitiveDataPanel.is-review-complete .review-complete-reset,
+  #sensitiveDataPanel.is-review-complete .review-complete-clear {
     min-height: 36px;
     padding: 0 12px;
     font-size: 13px;

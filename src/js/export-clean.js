@@ -1,4 +1,21 @@
 /**
+ * Generic download name for exported files: `redacted-YYYYMMDD-HHMMSS.ext`.
+ * The source file name is deliberately not reused so the output cannot hint at
+ * what was redacted.
+ * @param {string} [extension]
+ * @param {Date} [date]
+ * @returns {string}
+ */
+export function createRedactedFileName(extension = "png", date = new Date()) {
+  const allowed = ["pdf", "png", "jpg", "jpeg", "webp"];
+  const requested = String(extension || "").toLowerCase();
+  const ext = allowed.includes(requested) ? requested : "png";
+  const when = date instanceof Date && Number.isFinite(date.getTime()) ? date : new Date();
+  const stamp = when.toISOString().replace(/[^0-9]/g, "").slice(0, 14);
+  return `redacted-${stamp.slice(0, 8)}-${stamp.slice(8, 14)}.${ext}`;
+}
+
+/**
  * Clean export helpers (no EXIF/XMP): redraw onto a fresh canvas, then encode.
  * Extracted from editor.js so tests can import without DOMContentLoaded.
  */

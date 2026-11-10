@@ -1,79 +1,17 @@
 /**
  * Secure client-side PDF export with pdf-lib.
- * - vector: solid redaction rectangles in PDF page space (text under boxes may remain selectable)
- * - flatten: rasterize each page (hard redact) so underlying text cannot be extracted
+ *
+ * There is exactly one export path: every page is rasterized with the redaction
+ * boxes burned into pixels, then written into a brand-new image-only PDF. The
+ * source document is never re-saved, so no text layer, annotations, form fields,
+ * JavaScript, XMP or Info metadata can survive the round-trip.
  */
 
-import { PDFDocument, rgb } from "pdf-lib";
-import { createCleanOutputCanvas } from "../js/export-clean.js";
-
-export const PDF_EXPORT_MODES = Object.freeze({
-  VECTOR: "vector",
-  FLATTEN: "flatten",
-});
+import { PDFDocument } from "pdf-lib";
+import { createCleanOutputCanvas, createRedactedFileName } from "../js/export-clean.js";
 
 /**
- * Convert a CSS hex/rgb color to pdf-lib 0–1 RGB components.
- * @param {string} [value]
- * @returns {{ r: number, g: number, b: number }}
- */
-export function parseCssColorToRgb(value) {
-  const raw = String(value || "#000000").trim();
-  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(raw);
-  if (hex) {
-    let body = hex[1];
-    if (body.length === 3) {
-      body = body.split("").map((ch) => ch + ch).join("");
-    }
-    return {
-      r: Number.parseInt(body.slice(0, 2), 16) / 255,
-      g: Number.parseInt(body.slice(2, 4), 16) / 255,
-      b: Number.parseInt(body.slice(4, 6), 16) / 255,
-    };
-  }
-  const rgbMatch = /^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)/i.exec(raw);
-  if (rgbMatch) {
-    return {
-      r: Math.min(255, Number(rgbMatch[1])) / 255,
-      g: Math.min(255, Number(rgbMatch[2])) / 255,
-      b: Math.min(255, Number(rgbMatch[3])) / 255,
-    };
-  }
-  return { r: 0, g: 0, b: 0 };
-}
-
-/**
- * Map editor canvas-space rect (top-left origin, at render scale) to PDF page space (bottom-left).
- * @param {{ x?: number, y?: number, width?: number, height?: number }} rect
- * @param {number} pageWidth PDF points
- * @param {number} pageHeight PDF points
- * @param {number} scale canvas pixels per PDF point
- * @returns {{ x: number, y: number, width: number, height: number } | null}
- */
-export function canvasRectToPdfRect(rect, pageWidth, pageHeight, scale = 1) {
-  const safeScale = Number(scale) > 0 ? Number(scale) : 1;
-  const x = Number(rect?.x);
-  const y = Number(rect?.y);
-  const width = Number(rect?.width);
-  const height = Number(rect?.height);
-  if (![x, y, width, height].every(Number.isFinite)) return null;
-  if (!(width > 0) || !(height > 0)) return null;
-
-  const pdfWidth = width / safeScale;
-  const pdfHeight = height / safeScale;
-  const pdfX = x / safeScale;
-  const pdfY = pageHeight - y / safeScale - pdfHeight;
-
-  return {
-    x: clamp(pdfX, 0, pageWidth),
-    y: clamp(pdfY, 0, pageHeight),
-    width: Math.min(pdfWidth, pageWidth - clamp(pdfX, 0, pageWidth)),
-    height: Math.min(pdfHeight, pageHeight - clamp(pdfY, 0, pageHeight)),
-  };
-}
-
-/**
- * Solid fill color for a redaction. Non-blackout styles hard-cover as black in vector mode.
+ * Solid fill color for a redaction. Non-blackout styles hard-cover as black.
  * @param {object} redaction
  * @returns {string}
  */
@@ -106,7 +44,6 @@ export function normalizeRedactionsByPage(input) {
  * @param {ArrayBuffer|Uint8Array} options.pdfBytes
  * @param {Map|Record} [options.redactionsByPage]
  * @param {number} [options.scale=2]
- * @param {"vector"|"flatten"} [options.mode="flatten"]
  * @param {(info: { page: number, pageCount: number, progress: number, phase: string }) => void} [options.onProgress]
  * @param {(pageNumber: number, scale: number) => Promise<{ canvas: object, width?: number, height?: number }>} [options.renderPage]
  * @param {{ createElement?: Function, drawBlur?: Function, drawPixelate?: Function }} [options.canvasDeps]
@@ -114,57 +51,12 @@ export function normalizeRedactionsByPage(input) {
  * @returns {Promise<Uint8Array>}
  */
 export async function exportRedactedPdf(options = {}) {
-  const mode = options.mode === PDF_EXPORT_MODES.VECTOR
-    ? PDF_EXPORT_MODES.VECTOR
-    : PDF_EXPORT_MODES.FLATTEN;
   const scale = Number(options.scale) > 0 ? Number(options.scale) : 2;
   const redactionsByPage = normalizeRedactionsByPage(options.redactionsByPage);
   const pdfBytes = toUint8Array(options.pdfBytes);
   if (!pdfBytes?.length) throw new Error("PDF bytes are required for export.");
 
-  if (mode === PDF_EXPORT_MODES.VECTOR) {
-    return exportVectorRedactedPdf(pdfBytes, redactionsByPage, scale, options.onProgress);
-  }
   return exportFlattenedRedactedPdf(pdfBytes, redactionsByPage, scale, options);
-}
-
-/**
- * Overlay solid rectangles on the original PDF pages (does not remove text operators).
- */
-async function exportVectorRedactedPdf(pdfBytes, redactionsByPage, scale, onProgress) {
-  const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
-  const pages = pdfDoc.getPages();
-  const pageCount = pages.length;
-
-  for (let index = 0; index < pageCount; index += 1) {
-    const pageNumber = index + 1;
-    const page = pages[index];
-    const { width: pageWidth, height: pageHeight } = page.getSize();
-    const redactions = redactionsByPage.get(pageNumber) || [];
-
-    for (const redaction of redactions) {
-      const rect = canvasRectToPdfRect(redaction, pageWidth, pageHeight, scale);
-      if (!rect || !(rect.width > 0) || !(rect.height > 0)) continue;
-      const color = parseCssColorToRgb(redactionFillColor(redaction));
-      page.drawRectangle({
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-        color: rgb(color.r, color.g, color.b),
-        borderWidth: 0,
-      });
-    }
-
-    onProgress?.({
-      page: pageNumber,
-      pageCount,
-      progress: pageNumber / pageCount,
-      phase: "vector",
-    });
-  }
-
-  return pdfDoc.save();
 }
 
 /**
@@ -316,16 +208,13 @@ export async function canvasToPngBytes(canvas) {
 }
 
 /**
- * Build a redacted PDF download filename.
- * @param {string} [name]
+ * Build a generic redacted PDF download filename. The source name is never
+ * reused, so the exported file cannot hint at the original document.
+ * @param {Date} [date]
  * @returns {string}
  */
-export function createRedactedPdfFileName(name) {
-  const safe = String(name || "document")
-    .replace(/\.[^/.]+$/, "")
-    .replace(/[<>:"/\\|?*\u0000-\u001F]/g, "-")
-    .trim();
-  return `${safe || "document"}_redacted.pdf`;
+export function createRedactedPdfFileName(date = new Date()) {
+  return createRedactedFileName("pdf", date);
 }
 
 function toUint8Array(value) {
@@ -351,8 +240,4 @@ function toUint8Array(value) {
     }
   }
   return null;
-}
-
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
 }
