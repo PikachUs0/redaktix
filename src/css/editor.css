@@ -3234,28 +3234,52 @@ html[data-theme="dark"] .export-menu {
   font-size: 12px;
 }
 
-.adsense-success-banner {
+/* Ad slot: only ever populated by src/ads/adguard.js, and only after the
+   privacy gate says yes. Kept far below the Download / "Redact another"
+   actions with generous whitespace, never next to a button or the canvas. */
+.rdx-ad-slot {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   width: 100%;
-  min-height: 90px;
-  margin-top: 4px;
-  border: 1px dashed rgba(148, 163, 184, 0.45);
-  border-radius: 8px;
-  background: rgba(148, 163, 184, 0.12);
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  box-sizing: border-box;
+}
+
+.rdx-ad-slot[hidden] {
+  display: none;
+}
+
+.rdx-ad-label {
+  margin: 0;
   color: #94a3b8;
   font-family: "JetBrains Mono", ui-monospace, monospace;
-  font-size: 11px;
-  letter-spacing: 0.08em;
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  box-sizing: border-box;
+  text-align: center;
+}
+
+.rdx-ad-slot ins {
+  display: block;
+  width: 100%;
+  min-height: 90px;
+}
+
+.review-complete-reset {
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(15, 23, 42, 0.55);
+  color: #e2e8f0;
 }
 
 #reviewRedactButton,
 #reviewDismissButton,
 #reviewKeepButton,
-#reviewExportButton {
+#reviewExportButton,
+#reviewResetButton {
   min-width: 44px;
   min-height: 44px;
   touch-action: manipulation;
@@ -3752,7 +3776,8 @@ body > header .bg-primary-container {
     gap: 8px;
   }
 
-  #sensitiveDataPanel.is-review-complete .review-complete-download {
+  #sensitiveDataPanel.is-review-complete .review-complete-download,
+  #sensitiveDataPanel.is-review-complete .review-complete-reset {
     min-height: 36px;
     padding: 0 12px;
     font-size: 13px;

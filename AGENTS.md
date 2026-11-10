@@ -13,6 +13,7 @@ Redaktix (`package.json` name `redaktix`, app root `privacylab/`) is a browser-b
 - Tesseract: `tesseract.js` `createWorker` in `ocr.js`. `workerPath`, `corePath`, and `langPath` are same-origin `{BASE_URL}assets/ocr` (`public/assets/ocr`). Languages `eng`+`tur`. One worker. `public/sw.js` / stamped `dist/sw.js` precache OCR core, lang, and worker for offline editor use.
 - Runtime network: OCR assets are same-origin fetches; the screenshot is not uploaded. This is not zero-network. `public/sw.js` fetches same-origin GETs. `editor.js` `openDeviceImagePicker` fetches a device photo URI.
 - Analytics boundary: the redaction app (`editor.html`, OCR/detectors/tool pages, `dist/editor.html`) has **zero** analytics/telemetry/third-party origins — including no `_vercel` / `va.vercel-scripts`. Marketing (`index.html` + `src/js/landing.js`) may use `src/js/marketing-analytics.js` (cookieless same-origin hook via `<meta name="redaktix-analytics-endpoint">`, empty = off) and the Vercel Web Analytics snippet (`/_vercel/insights/script.js`). No gtag/GA/GTM anywhere.
+- Ad boundary (single scoped exception): ad-network code may be injected **only** by `src/ads/adguard.js`, and only on the editor route. No static `<script>`/`<ins class="adsbygoogle">` may exist in any HTML. The guard keeps ads off for `/verify`, `/privacy`, all `/tools/*` (`adsInToolPages: false`), `?privacy_mode=`, privacy `?ref=`/`utm_source=`, privacy referrer hosts, a sticky `sessionStorage` opt-out, and Global Privacy Control. Ad origins appear in `editor.html`'s meta CSP and in `tests/no-external-origins.test.js`'s `AD_ORIGIN_FILES` allowance; `/tools/*`, `/verify/` and `/privacy` keep `connect-src 'self'` via `vercel.json`.
 
 ## 3. DETECTION RULES
 ### ALWAYS_ON (`detection-profiles.js` `ALWAYS_ON_DETECTORS`)
@@ -66,7 +67,7 @@ Hard test rule: do not import `ocr.js` / `loadOcrModule()` from unit tests. Do n
 ## 7. HARD RULES
 - Never loosen or remove a checksum validation (IBAN mod-97, TCKN, VKN, Luhn).
 - Never drop an ALWAYS_ON detector from tool pages or suppression.
-- Never add network requests, telemetry, or external CDNs to the redaction app. Marketing may use `marketing-analytics.js` and landing-only Vercel insights; never GA/gtag; never put `_vercel` / `va.vercel-scripts` in editor or tool pages.
+- Never add network requests, telemetry, or external CDNs to the redaction app. Marketing may use `marketing-analytics.js` and landing-only Vercel insights; never GA/gtag; never put `_vercel` / `va.vercel-scripts` in editor or tool pages. The only exception is the runtime-gated ad slot described above: ad code comes from `src/ads/adguard.js` alone, never from static markup, and never on `/tools/*`, `/verify/` or `/privacy`.
 - Never delete or weaken a test to make it pass.
 - Do not modify files outside the task scope.
 - Do not touch `android/**` unless the task explicitly requires it.

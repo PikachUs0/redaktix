@@ -8,6 +8,7 @@ import { applyI18n, onLanguageChange, startI18n, t } from "./i18n.js";
 import { registerRedaktixWorker } from "./pwa.js";
 import { initPwaInstall } from "./pwa-install.js";
 import { trackEvent } from "./analytics.js";
+import { mountSlot } from "../ads/adguard.js";
 import {
   deleteUserCustomRule,
   loadCustomRules,
@@ -487,6 +488,25 @@ document.addEventListener("DOMContentLoaded", () => {
     editorState.isScanning = false;
     resetHistory();
     renderSensitiveDataPanel();
+  }
+
+  async function startNewRedaction() {
+    await destroyPdfSession();
+    clearPreviousObjectUrl();
+    editorState.image = null;
+    editorState.imageWidth = 0;
+    editorState.imageHeight = 0;
+    editorState.sourceName = null;
+    editorState.objectUrl = null;
+    resetEditorDocumentState();
+    document.getElementById("editorCanvasStage")?.remove();
+    emptyState.hidden = false;
+    if (selectedFileMessage) {
+      selectedFileMessage.hidden = true;
+      selectedFileMessage.textContent = "";
+      selectedFileMessage.classList.remove("is-error");
+    }
+    fileInput.value = "";
   }
 
   async function loadPdfFile(file) {
@@ -7994,6 +8014,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="real-detection-panel-meta">
             <button id="reviewExportButton" class="review-action review-action-redact review-complete-download" type="button" data-i18n="editor.download">Download</button>
+            <button id="reviewResetButton" class="review-action review-complete-reset" type="button">Redact another</button>
             <a id="buyMeCoffeeButton" class="review-action review-bmac" href="https://redaktix.com/support" target="_blank" rel="noopener noreferrer">
               <span class="material-symbols-outlined" aria-hidden="true">local_cafe</span>
               Buy Me a Coffee
@@ -8006,9 +8027,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <p data-i18n="editor.readyBody">${escapeHtml(t("editor.readyBody"))}</p>
             <p class="review-complete-local">Processed 100% locally in your browser. No upload, no server — the file and its details never leave this device.</p>
             <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
-            <div id="adsense-success-banner" class="adsense-success-banner" role="complementary" aria-label="Advertisement">
-              <span>Advertisement</span>
-            </div>
+            <div class="rdx-ad-slot" data-rdx-ad-slot="export" hidden></div>
           </div>
         </div>
       `;
@@ -8020,7 +8039,13 @@ document.addEventListener("DOMContentLoaded", () => {
         event.stopPropagation();
         openExportFromReview(event.currentTarget);
       });
+      document.getElementById("reviewResetButton")?.addEventListener("click", (event) => {
+        event.preventDefault();
+        void startNewRedaction();
+      });
       document.getElementById("customRulesButton")?.addEventListener("click", openCustomRulesDialog);
+      const adSlot = sensitiveDataPanel.querySelector('[data-rdx-ad-slot="export"]');
+      mountSlot(adSlot, "export").catch(() => {});
       syncReviewSheetLayoutClass();
       refitCanvasAfterSheetChange();
       return;

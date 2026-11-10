@@ -12,7 +12,14 @@
   <title data-i18n="meta.editorTitle">Redaktix Editor</title>
   <link rel="manifest" href="/manifest.webmanifest"/>
   <meta name="theme-color" content="#0a0f1d"/>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; worker-src 'self' blob:;">
+  <!--
+    Ads route. Ad-network origins are permitted here because this is the only
+    page that can show an ad slot, and src/ads/adguard.js keeps them switched
+    off unless the privacy gate passes (organic referrer, no privacy_mode,
+    no GPC, no sticky opt-out). /tools/* and /verify/ stay strict
+    (connect-src 'self', zero ad origins) via vercel.json.
+  -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://tpc.googlesyndication.com; connect-src 'self' https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.doubleclick.net https://*.googleadservices.com https://adservice.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com; worker-src 'self' blob:; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.doubleclick.net https://*.googlesyndication.com https://*.googleadservices.com https://adservice.google.com https://www.google.com; object-src 'none'; base-uri 'self'; form-action 'none';"
   <link rel="icon" href="/icons/icon-192.png"/>
 </head>
 <body class="bg-surface font-body-md text-body-md text-on-surface antialiased overflow-x-hidden">

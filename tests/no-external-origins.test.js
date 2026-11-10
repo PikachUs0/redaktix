@@ -34,6 +34,45 @@ const ALLOWED_NAMESPACE_PREFIXES = [
 const SCAN_EXTENSIONS = new Set([".html", ".js", ".css", ".webmanifest", ".xml", ".json"]);
 const URL_RE = /https?:\/\/[^\s"'`<>)\\]+/gi;
 
+/**
+ * Scoped ad allowance.
+ *
+ * Ad-network origins may appear in exactly two places, and nowhere else:
+ * - `src/ads/adguard.js`, the single module allowed to inject ad code;
+ * - the editor CSP, which has to name the origins it permits.
+ *
+ * Every other app surface (tool pages, /verify, components, detectors) stays
+ * at zero external origins. The privacy gate in the ad guard decides at runtime
+ * whether any of these origins is ever contacted.
+ */
+const AD_ORIGIN_FILES = new Set([
+  "src/ads/adguard.js",
+  "editor.html",
+  "dist/editor.html",
+]);
+
+const AD_ORIGIN_SUFFIXES = [
+  "googlesyndication.com",
+  "doubleclick.net",
+  "googleadservices.com",
+  "adservice.google.com",
+  "google.com",
+  "gstatic.com",
+];
+
+function isAllowedAdOrigin(rel, raw) {
+  if (!AD_ORIGIN_FILES.has(rel)) return false;
+  const cleaned = raw.replace(/[.,;)]+$/g, "");
+  let host;
+  try {
+    host = new URL(cleaned).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  const bare = host.startsWith("*.") ? host.slice(2) : host;
+  return AD_ORIGIN_SUFFIXES.some((suffix) => bare === suffix || bare.endsWith(`.${suffix}`));
+}
+
 /** Third-party trackers — forbidden on BOTH app and marketing. */
 const FORBIDDEN_THIRD_PARTY = [
   "googletagmanager.com",
@@ -120,7 +159,7 @@ describe("no external origins — app vs marketing boundary", () => {
       }
       for (const match of text.matchAll(URL_RE)) {
         const url = match[0];
-        if (!isAllowedUrl(url)) hits.push(`${rel}: ${url}`);
+        if (!isAllowedUrl(url) && !isAllowedAdOrigin(rel, url)) hits.push(`${rel}: ${url}`);
       }
     }
     assert.deepEqual(hits, [], `App surface violations:\n${hits.join("\n")}`);
@@ -183,7 +222,7 @@ describe("no external origins — app vs marketing boundary", () => {
       if (rel.endsWith(".html")) {
         for (const match of text.matchAll(URL_RE)) {
           const url = match[0];
-          if (!isAllowedUrl(url)) hits.push(`${rel}: ${url}`);
+          if (!isAllowedUrl(url) && !isAllowedAdOrigin(rel, url)) hits.push(`${rel}: ${url}`);
         }
       }
     }
