@@ -12,11 +12,11 @@ function jsonLd(data) {
   return JSON.stringify(data).replaceAll("<", "\\u003c");
 }
 
-function pageShell({ lang, title, description, canonicalPath, jsonLdBlocks, body, scriptSrc, styleHref }) {
+function pageShell({ title, description, canonicalPath, jsonLdBlocks, body, scriptSrc, styleHref }) {
   const blocks = jsonLdBlocks.map((block) => `<script type="application/ld+json">${jsonLd(block)}</script>`).join("");
   const script = scriptSrc ? `<script type="module" src="${escapeHtml(scriptSrc)}"></script>` : "";
   return `<!DOCTYPE html>
-<html lang="${escapeHtml(lang)}">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -68,7 +68,7 @@ export function renderToolPage(entry, options = {}) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Redaktix", item: `${origin}/` },
-      { "@type": "ListItem", position: 2, name: entry.lang === "tr" ? "Araçlar" : "Tools", item: `${origin}${entry.lang === "tr" ? "/tr/" : "/tools/"}` },
+      { "@type": "ListItem", position: 2, name: "Tools", item: `${origin}/tools/` },
       { "@type": "ListItem", position: 3, name: entry.h1, item: `${origin}${path}` },
     ],
   };
@@ -84,13 +84,12 @@ export function renderToolPage(entry, options = {}) {
 <pre class="tool-example">${escapeHtml(entry.exampleCodeOrImage)}</pre>
 ${seoArticle}
 <section>
-<h2>${entry.lang === "tr" ? "Sorular" : "Questions"}</h2>
+<h2>Questions</h2>
 ${faqHtml}
 </section>
 <nav aria-label="Related tools"><ul>${related}</ul></nav>
 </main>`;
   return pageShell({
-    lang: entry.lang,
     title: `${entry.title} — Redaktix`,
     description: entry.introText,
     canonicalPath: path,
@@ -111,7 +110,6 @@ export function renderToolsIndex(options = {}) {
 <ul class="tool-index">${links}</ul>
 </main>`;
   return pageShell({
-    lang: "en",
     title: "Screenshot redaction tools — Redaktix",
     description: "Local screenshot tools for API keys, email, phone numbers, IP addresses, cards, JWTs, and Turkish ID numbers.",
     canonicalPath: "/tools/",
@@ -147,7 +145,6 @@ export function renderSecurityPage(options = {}) {
 <p><a href="/tools/">Browse the single-purpose tools</a></p>
 </main>`;
   return pageShell({
-    lang: "en",
     title: "Local processing proof — Redaktix",
     description: "How to confirm Redaktix keeps screenshot pixels in the browser and does not upload the image.",
     canonicalPath: "/security/",

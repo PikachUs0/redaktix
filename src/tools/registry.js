@@ -203,38 +203,6 @@ export const TOOLS = Object.freeze([
 <p><strong>Does blurring actually protect the number?</strong> Export flattens the blurred pixels into the image, so the original digits are not recoverable from the exported file. Keep the unblurred original private and share only this copy.</p>`,
     relatedSlugs: ["anonymize-w2-tax-form", "redact-ssn-pdf"],
   }),
-  tool({
-    slug: "tckn-gizle",
-    lang: "tr",
-    title: "Ekran görüntüsünde TCKN gizle",
-    h1: "Ekran görüntüsünde TCKN gizle",
-    keyword: "ekran görüntüsünde TCKN gizle",
-    presetProfile: "turkey",
-    activeDetectors: ["tckn"],
-    introText: "Bu sayfa, Türkiye profiliyle T.C. kimlik numarası önerilerini arar. Sağlaması tutan numaralar ve etiketin yanındaki şüpheli değerler yerelde işaretlenir. Ayrıca kart numaraları, IBAN, TCKN ve VKN yakalanır. Görüntü tarayıcıdan çıkmaz.",
-    exampleCodeOrImage: "T.C. Kimlik No: 10000000146\nBaşvuru kaydı: 2026-014",
-    faqList: [
-      { question: "Sağlama uymayan numara ne olur?", answer: "Etiketsiz ve sağlaması bozuk 11 hane elenir. T.C. Kimlik etiketinin yanındaki değer, kontrol için öneri olarak kalabilir." },
-      { question: "Numara bir sorgu servisine gidiyor mu?", answer: "Hayır. OCR ve kontrol bu sekmede biter. Dışarı giden isteklerde ekran görüntüsünün pikselleri yoktur." },
-    ],
-    relatedSlugs: ["ekran-goruntusu-telefon-gizle", "hide-api-key"],
-  }),
-  tool({
-    slug: "ekran-goruntusu-telefon-gizle",
-    lang: "tr",
-    title: "Ekran görüntüsündeki telefonu gizle",
-    h1: "Ekran görüntüsündeki telefonu gizle",
-    keyword: "ekran görüntüsü telefon gizle",
-    presetProfile: "turkey",
-    activeDetectors: ["phone"],
-    introText: "Müşteri kaydı veya fiş görüntüsündeki telefon satırını yerelde bulun. Türkiye profili açıkken bu sayfa telefon önerilerini öne çıkarır. Ayrıca kart numaraları, IBAN, TCKN ve VKN yakalanır. Karalama dosyası cihazınızda üretilir.",
-    exampleCodeOrImage: "Tel: 0532 111 22 33\nŞube: Kadıköy",
-    faqList: [
-      { question: "Boşluklu trunk öneki okunur mu?", answer: "Evet. 0 ile operatör kodu arasında boşluk olan satırlar, etiketli telefon bağlamında birleştirilebilir." },
-      { question: "TCKN de karalanır mı?", answer: "Evet. TCKN, VKN, kart ve IBAN her araç sayfasında ALWAYS_ON olarak kalır; bu sayfa telefonu öne çıkarır." },
-    ],
-    relatedSlugs: ["tckn-gizle", "redact-phone-number"],
-  }),
 ]);
 
 function tool(config) {
@@ -248,10 +216,6 @@ function tool(config) {
 
 export function toolPublicPath(entry) {
   const slug = typeof entry === "string" ? entry : entry?.slug;
-  const lang = typeof entry === "string"
-    ? TOOLS.find((item) => item.slug === slug)?.lang
-    : entry?.lang;
-  if (lang === "tr") return `/tr/${slug}/`;
   return `/tools/${slug}/`;
 }
 

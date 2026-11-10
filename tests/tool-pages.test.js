@@ -7,7 +7,6 @@ import { renderSecurityPage, renderSitemap, renderToolPage, renderToolsIndex } f
 
 const REQUIRED_FIELDS = [
   "slug",
-  "lang",
   "title",
   "h1",
   "keyword",
@@ -20,7 +19,7 @@ const REQUIRED_FIELDS = [
 ];
 
 describe("tool registry", () => {
-  it("lists the English and Turkish intent tools with unique copy", () => {
+  it("lists the English intent tools with unique copy", () => {
     assert.deepEqual(TOOLS.map((entry) => entry.slug), [
       "hide-api-key",
       "blur-email",
@@ -31,8 +30,6 @@ describe("tool registry", () => {
       "redact-ssn-pdf",
       "anonymize-w2-tax-form",
       "blur-routing-number",
-      "tckn-gizle",
-      "ekran-goruntusu-telefon-gizle",
     ]);
     const intros = new Set(TOOLS.map((entry) => entry.introText));
     assert.equal(intros.size, TOOLS.length);
@@ -43,7 +40,6 @@ describe("tool registry", () => {
       assert.equal(getToolBySlug(entry.slug), entry);
     }
     assert.equal(toolPublicPath(getToolBySlug("hide-api-key")), "/tools/hide-api-key/");
-    assert.equal(toolPublicPath(getToolBySlug("tckn-gizle")), "/tr/tckn-gizle/");
   });
 
   it("pre-renders SEO text, canonical tags, and schema into the HTML", () => {
@@ -60,7 +56,8 @@ describe("tool registry", () => {
     assert.match(security, /Verify in Chrome DevTools/);
     assert.match(security, /Screenshot pixels/);
     const index = renderToolsIndex();
-    assert.match(index, /href="\/tr\/tckn-gizle\/"/);
+    assert.match(index, /href="\/tools\/hide-api-key\/"/);
+    assert.match(index, /<html lang="en">/);
   });
 
   it("builds a sitemap for the home page, security page, verify page, tool hub, and every tool", () => {

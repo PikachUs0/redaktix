@@ -1,16 +1,10 @@
-import { onLanguageChange, t } from "./i18n.js";
-
-let offlineReadyState = false;
 let updatePromptVisible = false;
 
 function setOfflineReady(ready) {
-  offlineReadyState = ready;
   const badge = document.getElementById("offlineReadyBadge");
   if (!badge) return;
   badge.hidden = false;
-  const key = ready ? "badge.offlineReady" : "badge.localFirst";
-  badge.setAttribute("data-i18n", key);
-  badge.textContent = t(key);
+  badge.textContent = ready ? "Offline Ready" : "100% Local-First Engine";
 }
 
 function ensureUpdateBanner() {
@@ -63,8 +57,8 @@ function showUpdateAvailablePrompt(registration) {
   const banner = ensureUpdateBanner();
   const message = document.getElementById("pwaUpdateMessage");
   const button = document.getElementById("pwaUpdateReload");
-  message.textContent = t("pwa.updateAvailable");
-  button.textContent = t("pwa.reload");
+  message.textContent = "A new version is available.";
+  button.textContent = "Reload";
   banner.hidden = false;
   button.onclick = () => {
     const waiting = registration?.waiting;
@@ -74,16 +68,6 @@ function showUpdateAvailablePrompt(registration) {
     window.location.reload();
   };
 }
-
-onLanguageChange(() => {
-  setOfflineReady(offlineReadyState);
-  if (updatePromptVisible) {
-    const message = document.getElementById("pwaUpdateMessage");
-    const button = document.getElementById("pwaUpdateReload");
-    if (message) message.textContent = t("pwa.updateAvailable");
-    if (button) button.textContent = t("pwa.reload");
-  }
-});
 
 function watchForUpdates(registration) {
   if (!registration) return;

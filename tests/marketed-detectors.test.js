@@ -7,7 +7,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { messages } from "../src/js/i18n.js";
 import { TOOLS } from "../src/tools/registry.js";
 import { renderSecurityPage, renderToolsIndex } from "../src/tools/render-pages.js";
 
@@ -116,12 +115,10 @@ function collectMarketingSurfaces() {
   }
   surfaces.push({ id: "src/tools/registry.js", text: readFileSync(join(ROOT, "src/tools/registry.js"), "utf8") });
   surfaces.push({ id: "src/tools/render-pages.js", text: readFileSync(join(ROOT, "src/tools/render-pages.js"), "utf8") });
-  surfaces.push({ id: "src/js/i18n.js", text: readFileSync(join(ROOT, "src/js/i18n.js"), "utf8") });
+  surfaces.push({ id: "src/js/landing.js", text: readFileSync(join(ROOT, "src/js/landing.js"), "utf8") });
+  surfaces.push({ id: "src/js/editor.js", text: readFileSync(join(ROOT, "src/js/editor.js"), "utf8") });
   surfaces.push({ id: "renderSecurityPage()", text: renderSecurityPage() });
   surfaces.push({ id: "renderToolsIndex()", text: renderToolsIndex() });
-  for (const lang of ["en", "tr"]) {
-    surfaces.push({ id: `i18n messages.${lang}`, text: Object.values(messages[lang]).join("\n") });
-  }
   for (const tool of TOOLS) {
     surfaces.push({
       id: `TOOLS[${tool.slug}]`,

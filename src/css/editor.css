@@ -3476,32 +3476,6 @@ body > header .bg-primary-container {
   }
 }
 
-.lang-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 999px;
-  background: transparent;
-}
-
-.lang-switch button {
-  border: 0;
-  background: transparent;
-  color: #94a3b8;
-  font: 600 11px/1 system-ui, sans-serif;
-  letter-spacing: 0.04em;
-  padding: 5px 8px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.lang-switch button[aria-pressed="true"] {
-  background: rgba(148, 163, 184, 0.16);
-  color: #f8fafc;
-}
-
 @media (max-width: 639px) {
   body {
     display: flex;
@@ -3553,17 +3527,6 @@ body > header .bg-primary-container {
     min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
-  }
-
-  body > header .lang-switch {
-    flex: 0 0 auto;
-  }
-
-  body > header .lang-switch button {
-    min-width: 40px;
-    min-height: 40px;
-    padding: 8px 10px;
-    font-size: 13px;
   }
 
   body > header > div:last-child > button {

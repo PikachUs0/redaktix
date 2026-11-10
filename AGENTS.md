@@ -20,7 +20,7 @@ Redaktix (`package.json` name `redaktix`, app root `privacylab/`) is a browser-b
 Always enabled, including on tool pages via `limitToToolDetectors`:
 `tckn`, `vkn`, `credit_card`, `iban`, `private_key`, `bearer_token`, `connection_url`, `env_secret`, `passport`, `seed_phrase`.
 
-Scan note (TR/EN i18n `editor.scanAlwaysOnNote`): cards, IBAN, TCKN, VKN, API keys and private keys are always scanned.
+Scan note (English copy in `editor.js`): cards, IBAN, TCKN, VKN, API keys and private keys are always scanned.
 
 ### Checksums / validation
 - **IBAN**: `isValidIban` / `ibanMod97` in `sensitive-detectors.js` (country length table + mod-97). OCR country-code repair and cross-line wrap supported. Built-in custom rule `iban` / `TURKISH_IBAN_PATTERN` still contributes pattern matches.
@@ -57,7 +57,7 @@ Important suites (not exhaustive):
 - `tests/no-external-origins.test.js`, `tests/marketing-analytics-boundary.test.js`, `tests/no-vercel-in-app.test.js` — app vs marketing analytics boundary (Vercel/`_vercel` landing-only); with `CI=1` these **fail** if `dist/` is missing.
 - `tests/no-debug-ocr-prod.test.js`, `tests/no-detection-console.test.js` — privacy; with `CI=1` fail if `dist/` missing.
 - `tests/service-worker.test.js` — SW stamp + OCR precache list.
-- `tests/ocr-adaptive.test.js`, `tests/ocr-badge-tckn.test.js`, `tests/i18n.test.js`, `tests/batch-queue.test.js`, `tests/review-*.test.js`, `tests/tool-pages.test.js`.
+- `tests/ocr-adaptive.test.js`, `tests/ocr-badge-tckn.test.js`, `tests/batch-queue.test.js`, `tests/review-*.test.js`, `tests/tool-pages.test.js`.
 
 Hard test rule: do not import `ocr.js` / `loadOcrModule()` from unit tests. Do not auto-scan on profile change (profile menu removed).
 

@@ -5,7 +5,6 @@ import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
 import { sitemapPaths } from "../src/tools/registry.js";
 import { renderSitemap } from "../src/tools/render-pages.js";
-import { messages } from "../src/js/i18n.js";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const read = (rel) => readFileSync(join(ROOT, rel), "utf8");
@@ -78,13 +77,11 @@ describe("/verify/ page integration", () => {
 
   it("is linked from the landing header, footer, privacy policy, export panel, and README", () => {
     const landing = read("index.html");
-    assert.match(landing, /data-path="verify"\s+href="\/verify\/"\s+data-i18n="nav\.verify"/);
-    assert.match(landing, /data-path="verify" href="\/verify\/"\s+data-i18n="footer\.verify"/);
-    assert.match(landing, /<a href="\/verify\/" data-i18n="legal\.verifyLink">/);
+    assert.match(landing, /data-path="verify"\s+href="\/verify\/">Verify</);
+    assert.match(landing, /data-path="verify" href="\/verify\/">Verify It Yourself</);
+    assert.match(landing, /<a href="\/verify\/">run the verification tests<\/a>/);
     assert.match(read("src/js/editor.js"), /class="review-verify-link" href="\/verify\/"/);
     assert.match(read("README.md"), /\(\/verify\/\)/);
-    assert.ok(messages.en["nav.verify"] && messages.en["footer.verify"] && messages.en["editor.verifyLink"]);
-    assert.ok(messages.tr["nav.verify"] && messages.tr["footer.verify"] && messages.tr["editor.verifyLink"]);
   });
 
   it("ships the page-local stylesheet and build fingerprint helper", () => {

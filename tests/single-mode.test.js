@@ -15,7 +15,6 @@ import {
   readStoredDetectionProfile,
   writeStoredDetectionProfile,
 } from "../src/js/detection-profiles.js";
-import { messages } from "../src/js/i18n.js";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const EDITOR_JS = readFileSync(join(ROOT, "src/js/editor.js"), "utf8");
@@ -64,13 +63,11 @@ describe("single detection mode", () => {
     }
   });
 
-  it("exposes the always-scanned note near scan in TR/EN i18n", () => {
-    assert.match(EDITOR_JS, /editor\.scanAlwaysOnNote|scanAlwaysOnNote/);
-    assert.equal(
-      messages.en["editor.scanAlwaysOnNote"],
-      "Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned."
+  it("exposes the always-scanned note near scan as English copy", () => {
+    assert.match(EDITOR_JS, /editor-scan-always-on-note|scanAlwaysOnNote/i);
+    assert.match(
+      EDITOR_JS,
+      /Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned\./
     );
-    assert.ok(messages.tr["editor.scanAlwaysOnNote"]);
-    assert.match(messages.tr["editor.scanAlwaysOnNote"], /IBAN|TCKN|VKN/i);
   });
 });

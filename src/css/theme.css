@@ -436,32 +436,6 @@ html[data-theme="light"] .bg-\[\#05070B\] span {
   cursor: pointer;
 }
 
-.lang-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid #1e293b;
-  border-radius: 999px;
-  background: #111827;
-}
-
-.lang-switch button {
-  border: 0;
-  background: transparent;
-  color: #94a3b8;
-  font: 600 11px/1 system-ui, sans-serif;
-  letter-spacing: 0.04em;
-  padding: 5px 8px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-
-.lang-switch button[aria-pressed="true"] {
-  background: #1e293b;
-  color: #f8fafc;
-}
-
 .uppercase,
 .section-eyebrow,
 .editor-shortcut-group h3 {

@@ -17,7 +17,6 @@ const VALID_IBAN = "TR33 0006 1005 1978 6457 8413 26";
 const VALID_CARD = "4242 4242 4242 4242";
 
 const ALWAYS_ON_COPY_EN = "also catches card numbers, IBAN, TCKN and VKN";
-const ALWAYS_ON_COPY_TR = "kart numaraları, IBAN, TCKN ve VKN";
 
 function line(id, text, y = 10) {
   const tokens = text.split(/\s+/).filter(Boolean);
@@ -126,7 +125,7 @@ describe("tool pages keep ALWAYS_ON detectors", () => {
 
   it("every tool page intro mentions ALWAYS_ON checksum types", () => {
     for (const tool of TOOLS) {
-      const copy = tool.lang === "tr" ? ALWAYS_ON_COPY_TR : ALWAYS_ON_COPY_EN;
+      const copy = ALWAYS_ON_COPY_EN;
       assert.match(
         tool.introText,
         new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),

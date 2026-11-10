@@ -2,7 +2,6 @@ import "../css/fonts.css";
 import { registerRedaktixWorker } from "./pwa.js";
 import { initPwaInstall } from "./pwa-install.js";
 import { ANALYTICS_SINK_KEY } from "./analytics.js";
-import { startI18n, t } from "./i18n.js";
 import { initMarketingAnalytics } from "./marketing-analytics.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -138,20 +137,17 @@ fixLandingBrand();
     });
   });
 
-  startI18n();
   console.log("Redaktix landing navigation loaded");
 });
 
 function initializeLocalProcessingBadge() {
   const badge = document.getElementById("localProcessingBadge");
   if (!badge) return;
-  badge.setAttribute("data-i18n", "badge.local");
-  badge.textContent = t("badge.local");
+  badge.textContent = "🟢 100% Local Processing (Zero Data Upload)";
   if (badge.tagName === "A") badge.setAttribute("href", "/security/");
   const popover = document.getElementById("localProcessingPopover");
   const message = popover?.querySelector("p");
   if (message) {
-    message.setAttribute("data-i18n", "badge.popover");
-    message.textContent = t("badge.popover");
+    message.textContent = "OCR runs in WebAssembly inside your browser. Recognition stays on this device and does not depend on an external network.";
   }
 }

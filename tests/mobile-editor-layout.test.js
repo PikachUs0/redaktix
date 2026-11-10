@@ -1,5 +1,5 @@
 /**
- * Mobile editor layout guards (no browser): CSS mobile rules and panel i18n keys.
+ * Mobile editor layout guards (no browser): CSS mobile rules and review-panel copy.
  * Full overflow / overlap verification requires a real phone or Playwright.
  */
 import assert from "node:assert/strict";
@@ -7,34 +7,26 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, it } from "node:test";
 import { fileURLToPath } from "node:url";
-import { messages } from "../src/js/i18n.js";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const CSS = readFileSync(join(ROOT, "src", "css", "editor.css"), "utf8");
+const EDITOR = readFileSync(join(ROOT, "src", "js", "editor.js"), "utf8");
 
-const PANEL_I18N_KEYS = [
-  "editor.reviewSummary",
-  "editor.reviewSummaryOne",
-  "editor.reviewPosition",
-  "editor.reviewPrevious",
-  "editor.reviewNext",
-  "editor.reviewRedact",
-  "editor.reviewDismiss",
-  "editor.reviewKeep",
-  "editor.redactionStyle",
-  "editor.ocrConfidenceHint",
-  "editor.ocrConfidenceLow",
-  "editor.ocrMayMisread",
-  "editor.collapsePanel",
-  "editor.clientSideFooter",
-  "editor.scanAlwaysOnNote",
-  "editor.suggest",
-  "editor.privacyReview",
-  "editor.privacyReviewCount",
-  "editor.privacyReviewCountOne",
-  "editor.expandPanel",
-  "editor.localAnalysis",
-  "badge.localCompact",
+/** English review-panel and scan-note copy that must stay directly in the editor source. */
+const PANEL_COPY = [
+  "Previous",
+  "Next",
+  "Redact",
+  "Dismiss",
+  "Keep Visible",
+  "Redaction style",
+  "OCR confidence. This percentage does not prove the value is valid.",
+  "Sensitive Data",
+  "Hide all",
+  "Analysis runs locally in this browser",
+  "Expand review panel",
+  "Collapse review panel",
+  "Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned.",
 ];
 
 /** Extract @media (max-width: Npx) blocks for N <= 640. */
@@ -61,7 +53,7 @@ function extractMobileMediaBlocks(css) {
   return blocks;
 }
 
-describe("mobile editor layout CSS and i18n", () => {
+describe("mobile editor layout CSS and copy", () => {
   it("mobile rules (max-width <= 640px) do not set hard-coded min-width above 360px", () => {
     const blocks = extractMobileMediaBlocks(CSS);
     assert.ok(blocks.length > 0, "expected mobile @media blocks");
@@ -92,29 +84,19 @@ describe("mobile editor layout CSS and i18n", () => {
     assert.match(mobileCss, /\.editor-unified-tool-rail/);
   });
 
-  it("defines TR/EN i18n keys for review panel and scan-note strings", () => {
-    const missing = [];
-    for (const key of PANEL_I18N_KEYS) {
-      if (!messages.en[key]) missing.push(`en:${key}`);
-      if (!messages.tr[key]) missing.push(`tr:${key}`);
-    }
-    assert.deepEqual(missing, [], `Missing panel i18n keys:\n${missing.join("\n")}`);
-    assert.match(messages.en["editor.reviewSummary"], /\{n\}/);
-    assert.match(messages.tr["editor.reviewSummary"], /\{n\}/);
-    assert.match(messages.tr["editor.privacyReviewCount"], /\{n\}/);
-    assert.match(messages.tr["editor.privacyReviewCount"], /potansiyel sorun/);
+  it("keeps the review panel and scan-note copy in English inside the editor source", () => {
+    const missing = PANEL_COPY.filter((copy) => !EDITOR.includes(copy));
+    assert.deepEqual(missing, [], `Missing English panel copy:\n${missing.join("\n")}`);
+    assert.match(EDITOR, /`Redaktix found \$\{detections\.length\} potential sensitive/);
+    assert.match(EDITOR, /`\$\{reviewIndex \+ 1\} of \$\{detections\.length\}`/);
   });
 
   it("editor wires scan-note toggle and panel collapse without detection changes", () => {
-    const editor = readFileSync(join(ROOT, "src", "js", "editor.js"), "utf8");
-    assert.match(editor, /editor-scan-note-toggle/);
-    assert.match(editor, /reviewPanelCollapseButton/);
-    assert.match(editor, /editor\.reviewSummary/);
-    assert.match(editor, /editor\.ocrConfidenceLow/);
-    assert.match(editor, /privacyReviewHeading/);
-    assert.match(editor, /editor\.privacyReviewCount/);
-    assert.match(editor, /syncUnifiedMobileToolbar/);
-    assert.match(editor, /editorDrawingToolsSlot/);
-    assert.match(editor, /review-sheet-body/);
+    assert.match(EDITOR, /editor-scan-note-toggle/);
+    assert.match(EDITOR, /reviewPanelCollapseButton/);
+    assert.match(EDITOR, /privacyReviewHeading/);
+    assert.match(EDITOR, /syncUnifiedMobileToolbar/);
+    assert.match(EDITOR, /editorDrawingToolsSlot/);
+    assert.match(EDITOR, /review-sheet-body/);
   });
 });

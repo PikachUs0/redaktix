@@ -4,7 +4,6 @@ import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import "./theme.js";
-import { applyI18n, onLanguageChange, startI18n, t } from "./i18n.js";
 import { registerRedaktixWorker } from "./pwa.js";
 import { initPwaInstall } from "./pwa-install.js";
 import { trackEvent } from "./analytics.js";
@@ -145,7 +144,6 @@ function watchFixedUi() {
 
 document.addEventListener("DOMContentLoaded", () => {
   watchFixedUi();
-  startI18n();
   removeDuplicateBrandText();
 
   const workspace = document.getElementById("editorWorkspace");
@@ -245,14 +243,14 @@ document.addEventListener("DOMContentLoaded", () => {
       <div class="editor-empty-icon" aria-hidden="true">
         <span class="material-symbols-outlined" translate="no">screenshot</span>
       </div>
-      <h1 data-i18n="editor.pasteTitle">Paste or drop a screenshot</h1>
-      <p class="editor-empty-description" data-i18n="editor.dropHint">
+      <h1>Paste or drop a screenshot</h1>
+      <p class="editor-empty-description">
         ${EMPTY_DROPZONE_HINT}
       </p>
       <div class="editor-empty-actions">
         <button id="chooseImageButton" class="editor-empty-button" type="button">
           <span class="material-symbols-outlined" translate="no" aria-hidden="true">add_photo_alternate</span>
-          <span data-i18n="drop.choose">Choose an image</span>
+          <span>Choose an image</span>
         </button>
         <kbd translate="no">Ctrl + V</kbd>
       </div>
@@ -260,39 +258,12 @@ document.addEventListener("DOMContentLoaded", () => {
       <span class="editor-supported-formats">PNG, JPG, WebP and PDF</span>
       <div class="editor-local-message">
         <span class="material-symbols-outlined" translate="no" aria-hidden="true">lock</span>
-        <span data-i18n="editor.stays">Your image stays on this device</span>
+        <span>Your image stays on this device</span>
       </div>
       <p class="editor-shortcut-legend">${REVIEW_SHORTCUT_LEGEND}</p>
     </div>
   `;
   workspace.appendChild(emptyState);
-  applyI18n(emptyState);
-  onLanguageChange(() => {
-    renderSensitiveDataPanel();
-    syncToolIntensityBar();
-    const statusKey = {
-      select: "editor.statusSelect",
-      blackout: "editor.statusBlackout",
-      blur: "editor.statusBlur",
-      pixelate: "editor.statusPixelate",
-    }[editorState.activeTool];
-    if (statusKey) updateActiveToolStatus(t(statusKey));
-    updateHistoryButtons();
-    applyI18n(document);
-  });
-  applyI18n(emptyState);
-  onLanguageChange(() => {
-    applyI18n(document);
-    renderSensitiveDataPanel();
-    syncToolIntensityBar();
-    const statusKey = {
-      select: "editor.statusSelect",
-      blackout: "editor.statusBlackout",
-      blur: "editor.statusBlur",
-      pixelate: "editor.statusPixelate",
-    }[editorState.activeTool];
-    if (statusKey) updateActiveToolStatus(t(statusKey));
-  });
 
   const chooseImageButton = document.getElementById("chooseImageButton");
   const selectedFileMessage = document.getElementById("selectedFileMessage");
@@ -589,7 +560,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await presentPdfPage(1, { rebuildStage: true, autoScan: false });
       } catch (previewError) {
         console.error("Redaktix PDF page preview failed:", previewError);
-        showStatus(t("editor.pdfPreviewFailed"), true);
+        showStatus("PDF preview failed. Sensitive-data scanning will still run.", true);
       }
 
       if (selectedFileMessage) {
@@ -799,9 +770,9 @@ document.addEventListener("DOMContentLoaded", () => {
     badge.setAttribute("aria-busy", visible && !error ? "true" : "false");
     const label = document.getElementById("pdfScanProgressLabel");
     if (label) {
-      if (error) label.textContent = t("editor.pdfScanFailed");
-      else if (visible && pageCount > 0) label.textContent = t("editor.pdfScanProgress", { page, pageCount });
-      else label.textContent = t("editor.pdfScanPreparing");
+      if (error) label.textContent = "PDF scan failed — open console for details";
+      else if (visible && pageCount > 0) label.textContent = `Scanning page ${page} of ${pageCount}…`;
+      else label.textContent = "Preparing document scan…";
     }
   }
 
@@ -887,11 +858,10 @@ document.addEventListener("DOMContentLoaded", () => {
       updateCanvas: page === editorState.pdfSession?.currentPage,
       statusLabel: found
         ? `${found} ${label} · Scanning page ${page} of ${pageCount}`
-        : t("editor.pdfScanProgress", { page, pageCount }),
+        : `Scanning page ${page} of ${pageCount}…`,
     });
     if (buttonLabel) {
-      buttonLabel.removeAttribute("data-i18n");
-      buttonLabel.textContent = t("editor.pdfScanProgress", { page, pageCount });
+      buttonLabel.textContent = `Scanning page ${page} of ${pageCount}…`;
     }
   }
 
@@ -951,7 +921,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     session.usedOcrFallback = true;
     let pageFailures = 0;
-    showStatus(t("editor.pdfOcrFallback"));
+    showStatus("No extractable text layer — scanning page images with OCR…");
     for (let index = 0; index < emptyPages.length; index += 1) {
       if (signal?.aborted || !isActivePdfScan(session, scanId, requestId)) break;
       const page = emptyPages[index];
@@ -1046,11 +1016,10 @@ document.addEventListener("DOMContentLoaded", () => {
             updateCanvas: page === session.currentPage,
             statusLabel: found
               ? `${found} ${label} · Scanning page ${page} of ${pageCount}`
-              : t("editor.pdfScanProgress", { page, pageCount }),
+              : `Scanning page ${page} of ${pageCount}…`,
           });
           if (buttonLabel) {
-            buttonLabel.removeAttribute("data-i18n");
-            buttonLabel.textContent = t("editor.pdfScanProgress", { page, pageCount });
+            buttonLabel.textContent = `Scanning page ${page} of ${pageCount}…`;
           }
         },
       });
@@ -1063,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (scanAborted) {
-        showStatus(t("editor.pdfScanAborted"), true);
+        showStatus("PDF scan was interrupted. Click Scan sensitive data to retry.", true);
         return;
       }
 
@@ -1082,7 +1051,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (controller?.signal?.aborted) {
-        showStatus(t("editor.pdfScanAborted"), true);
+        showStatus("PDF scan was interrupted. Click Scan sensitive data to retry.", true);
         return;
       }
 
@@ -1096,7 +1065,7 @@ document.addEventListener("DOMContentLoaded", () => {
         renderCanvas();
         updateActiveToolStatus(
           session.usedOcrFallback
-            ? t("editor.pdfScanEmptyAfterOcr")
+            ? "OCR finished · No supported sensitive data found"
             : "Text scan complete · No supported sensitive data found"
         );
       }
@@ -1107,7 +1076,7 @@ document.addEventListener("DOMContentLoaded", () => {
           : pageFailures
             ? "PDF scan finished with page errors. Some pages could not be analyzed."
             : session.usedOcrFallback
-              ? t("editor.pdfScanEmptyAfterOcr")
+              ? "OCR finished · No supported sensitive data found"
               : "Text scan complete. No supported sensitive data was found.",
         Boolean(pageFailures && !total)
       );
@@ -1120,7 +1089,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       if (controller?.signal?.aborted) {
         if (isActivePdfScan(session, scanId, requestId)) {
-          showStatus(t("editor.pdfScanAborted"), true);
+          showStatus("PDF scan was interrupted. Click Scan sensitive data to retry.", true);
         }
         return;
       }
@@ -1147,8 +1116,7 @@ document.addEventListener("DOMContentLoaded", () => {
           scanButton.classList.remove("is-scanning");
         }
         if (buttonLabel) {
-          buttonLabel.setAttribute("data-i18n", "editor.scan");
-          buttonLabel.textContent = t("editor.scan");
+          buttonLabel.textContent = "Scan sensitive data";
         }
       }
     }
@@ -1414,33 +1382,33 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="editor-unified-tool-rail" id="editorUnifiedToolRail">
           <div class="editor-drawing-tools-slot" id="editorDrawingToolsSlot"></div>
           <div class="editor-toolbar-actions">
-            <span id="activeToolStatus" class="editor-active-tool-status" data-i18n="editor.statusBlackout">Blackout tool active</span>
+            <span id="activeToolStatus" class="editor-active-tool-status">Blackout tool active</span>
             <button id="compareViewButton" class="editor-compare-button" type="button" aria-pressed="false">
               <span class="material-symbols-outlined" aria-hidden="true">compare</span>
-              <span data-i18n="editor.compare">Compare</span>
+              <span>Compare</span>
             </button>
             <div class="editor-scan-group">
               <button id="scanSensitiveDataButton" class="editor-scan-button" type="button">
                 <span class="material-symbols-outlined" aria-hidden="true">document_scanner</span>
-                <span data-i18n="editor.scan">Scan sensitive data</span>
+                <span>Scan sensitive data</span>
               </button>
               <button
                 type="button"
                 class="editor-scan-note-toggle"
-                data-i18n-aria="editor.scanAlwaysOnNote"
-                data-i18n-title="editor.scanAlwaysOnNote"
+                aria-label="Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned."
+                title="Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned."
                 aria-expanded="false"
                 aria-controls="editorScanAlwaysOnNote"
               >
                 <span class="material-symbols-outlined" aria-hidden="true">info</span>
               </button>
-              <p id="editorScanAlwaysOnNote" class="editor-scan-always-on-note" data-i18n="editor.scanAlwaysOnNote" hidden>
+              <p id="editorScanAlwaysOnNote" class="editor-scan-always-on-note" hidden>
                 Cards, IBAN, TCKN, VKN, API keys and private keys are always scanned.
               </p>
             </div>
             <button id="replaceImageButton" class="editor-replace-image-button" type="button">
               <span class="material-symbols-outlined" aria-hidden="true">upload</span>
-              <span ${openLabel ? "" : 'data-i18n="editor.openAnother"'}>${openLabel || "Open another image"}</span>
+              <span>${openLabel || "Open another image"}</span>
             </button>
           </div>
         </div>
@@ -3498,20 +3466,18 @@ document.addEventListener("DOMContentLoaded", () => {
     if (undoButton) {
       undoButton.disabled = !canUndo;
 
-      undoButton.setAttribute("data-i18n-aria", canUndo ? "editor.undoLast" : "editor.nothingToUndo");
       undoButton.setAttribute(
         "aria-label",
-        t(canUndo ? "editor.undoLast" : "editor.nothingToUndo")
+        canUndo ? "Undo last action" : "Nothing to undo"
       );
     }
 
     if (redoButton) {
       redoButton.disabled = !canRedo;
 
-      redoButton.setAttribute("data-i18n-aria", canRedo ? "editor.redoLast" : "editor.nothingToRedo");
       redoButton.setAttribute(
         "aria-label",
-        t(canRedo ? "editor.redoLast" : "editor.nothingToRedo")
+        canRedo ? "Redo last action" : "Nothing to redo"
       );
     }
 
@@ -3579,10 +3545,8 @@ document.addEventListener("DOMContentLoaded", () => {
     toggle.id = "historyDrawerButton";
     toggle.type = "button";
     toggle.className = redoButton.className;
-    toggle.title = t("editor.history");
-    toggle.setAttribute("data-i18n-title", "editor.history");
-    toggle.setAttribute("data-i18n-aria", "editor.history");
-    toggle.setAttribute("aria-label", t("editor.history"));
+    toggle.title = "Edit history";
+    toggle.setAttribute("aria-label", "Edit history");
     toggle.setAttribute("aria-expanded", "false");
     toggle.innerHTML = `<span class="material-symbols-outlined text-[18px] block">history</span>`;
     const historyCluster = redoButton.closest(".hidden");
@@ -5661,9 +5625,8 @@ document.addEventListener("DOMContentLoaded", () => {
         scanButton.disabled = false;
         scanButton.classList.remove("is-scanning");
         if (buttonLabel) {
-        buttonLabel.setAttribute("data-i18n", "editor.scan");
-        buttonLabel.textContent = t("editor.scan");
-      }
+          buttonLabel.textContent = "Scan sensitive data";
+        }
       }
     }
   }
@@ -7375,15 +7338,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function initializeLocalProcessingBadge() {
     const badge = document.getElementById("localProcessingBadge");
     if (!badge) return;
-    badge.setAttribute("data-i18n", "badge.localCompact");
-    badge.setAttribute("title", t("badge.local"));
-    badge.textContent = t("badge.localCompact");
+    badge.setAttribute("title", "🟢 100% Local Processing (Zero Data Upload)");
+    badge.textContent = "🟢 100% Local";
     if (badge.tagName === "A") badge.setAttribute("href", "/security/");
     const popover = document.getElementById("localProcessingPopover");
     const message = popover?.querySelector("p");
     if (message) {
-      message.setAttribute("data-i18n", "badge.popover");
-      message.textContent = t("badge.popover");
+      message.textContent = "OCR runs in WebAssembly inside your browser. Recognition stays on this device and does not depend on an external network.";
     }
   }
 
@@ -7409,7 +7370,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     banner.hidden = false;
     document.body.classList.add("has-mobile-desktop-notice");
-    applyI18n(banner);
 
     dismiss.addEventListener("click", () => {
       banner.hidden = true;
@@ -7929,9 +7889,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function privacyReviewHeading(count) {
-    if (count > 1) return t("editor.privacyReviewCount", { n: count });
-    if (count === 1) return t("editor.privacyReviewCountOne", { n: count });
-    return t("editor.sensitive");
+    if (count > 1) return `Privacy Review (${count} potential issues)`;
+    if (count === 1) return "Privacy Review (1 potential issue)";
+    return "Sensitive Data";
   }
 
   function isMobileEditorLayout() {
@@ -7966,8 +7926,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const syncCollapseUi = (collapsed) => {
       sensitiveDataPanel.classList.toggle("is-collapsed", collapsed);
       button.setAttribute("aria-expanded", collapsed ? "false" : "true");
-      button.setAttribute("aria-label", t(collapsed ? "editor.expandPanel" : "editor.collapsePanel"));
-      button.setAttribute("title", t(collapsed ? "editor.expandPanel" : "editor.collapsePanel"));
+      button.setAttribute("aria-label", collapsed ? "Expand review panel" : "Collapse review panel");
+      button.setAttribute("title", collapsed ? "Expand review panel" : "Collapse review panel");
       const icon = button.querySelector(".material-symbols-outlined");
       if (icon) icon.textContent = collapsed ? "expand_less" : "expand_more";
       syncReviewSheetLayoutClass();
@@ -8003,20 +7963,19 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="real-detection-panel-header">
           <div class="real-detection-panel-title">
             <span class="material-symbols-outlined real-detection-shield" aria-hidden="true">security</span>
-            <h2 class="real-detection-panel-heading">${escapeHtml(t("editor.sensitive"))}</h2>
+            <h2 class="real-detection-panel-heading">Sensitive Data</h2>
           </div>
           <div class="real-detection-panel-meta">
-            <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
+            <button id="customRulesButton" class="custom-rules-button" type="button">Custom Rules</button>
           </div>
         </div>
         <div class="review-sheet-body">
           <div class="real-detection-awaiting">
             <span class="material-symbols-outlined" aria-hidden="true">photo_library</span>
-            <p data-i18n="editor.loadShot">Load a screenshot. Analysis results will appear here.</p>
+            <p>Load a screenshot. Analysis results will appear here.</p>
           </div>
         </div>
       `;
-      applyI18n(sensitiveDataPanel);
       document.getElementById("customRulesButton")?.addEventListener("click", openCustomRulesDialog);
       syncReviewSheetLayoutClass();
       return;
@@ -8032,13 +7991,13 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="real-detection-panel-header">
           <div class="real-detection-panel-title">
             <span class="material-symbols-outlined real-detection-shield" aria-hidden="true">verified</span>
-            <h2 class="real-detection-panel-heading">${escapeHtml(t("editor.readyTitle"))}</h2>
+            <h2 class="real-detection-panel-heading">Privacy Check Complete - Ready to Export</h2>
             <button id="reviewPanelCollapseButton" class="review-panel-collapse" type="button" aria-expanded="true">
               <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
             </button>
           </div>
           <div class="real-detection-panel-meta">
-            <button id="reviewExportButton" class="review-action review-action-redact review-complete-download" type="button" data-i18n="editor.download">Download</button>
+            <button id="reviewExportButton" class="review-action review-action-redact review-complete-download" type="button">Download</button>
             <button id="reviewResetButton" class="review-action review-complete-reset" type="button">Redact another</button>
             <button id="reviewClearSessionButton" class="review-action review-complete-clear" type="button">Clear session</button>
             <a id="buyMeCoffeeButton" class="review-action review-bmac" href="https://redaktix.com/support" target="_blank" rel="noopener noreferrer">
@@ -8050,15 +8009,14 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="review-sheet-body">
           <div class="review-complete-card">
             <span class="material-symbols-outlined" aria-hidden="true">verified</span>
-            <p data-i18n="editor.readyBody">${escapeHtml(t("editor.readyBody"))}</p>
+            <p>Every pending suggestion has been resolved. The image is ready to export.</p>
             <p class="review-complete-local">Processed 100% locally in your browser. No upload, no server — the file and its details never leave this device.</p>
-            <a class="review-verify-link" href="/verify/" target="_blank" rel="noopener noreferrer" data-i18n="editor.verifyLink">Verify it yourself</a>
-            <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
+            <a class="review-verify-link" href="/verify/" target="_blank" rel="noopener noreferrer">Verify it yourself</a>
+            <button id="customRulesButton" class="custom-rules-button" type="button">Custom Rules</button>
             <div class="rdx-ad-slot" data-rdx-ad-slot="export" hidden></div>
           </div>
         </div>
       `;
-      applyI18n(sensitiveDataPanel);
       // On mobile, collapse the complete sheet so it stops covering the canvas.
       bindReviewPanelCollapse(collapseOnMobile || wasCollapsed);
       document.getElementById("reviewExportButton")?.addEventListener("click", (event) => {
@@ -8086,14 +8044,14 @@ document.addEventListener("DOMContentLoaded", () => {
       ? Math.min(Math.max(editorState.reviewIndex, 0), detections.length - 1)
       : -1;
     const summaryText = detections.length
-      ? t(detections.length === 1 ? "editor.reviewSummaryOne" : "editor.reviewSummary", { n: detections.length })
-      : t("editor.suggest");
+      ? `Redaktix found ${detections.length} potential sensitive ${detections.length === 1 ? "area" : "areas"}`
+      : "Redaktix suggests possible sensitive areas. Always review before sharing.";
     const countText = detections.length
-      ? t("editor.reviewPosition", { current: reviewIndex + 1, total: detections.length })
+      ? `${reviewIndex + 1} of ${detections.length}`
       : getDetectionSummary(0);
     const headingText = detections.length
       ? privacyReviewHeading(detections.length)
-      : t("editor.sensitive");
+      : "Sensitive Data";
 
     sensitiveDataPanel.innerHTML = `
       <div class="review-sheet-handle" aria-hidden="true"></div>
@@ -8107,8 +8065,8 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <div class="real-detection-panel-meta">
           <span class="real-detection-count">${escapeHtml(countText)}</span>
-          <button id="customRulesButton" class="custom-rules-button" type="button" data-i18n="editor.customRules">Custom Rules</button>
-          <button id="hideAllDetectionsButton" class="real-hide-all-button" type="button" data-i18n="editor.hideAll" ${detections.length ? "" : "disabled"}>Hide all</button>
+          <button id="customRulesButton" class="custom-rules-button" type="button">Custom Rules</button>
+          <button id="hideAllDetectionsButton" class="real-hide-all-button" type="button" ${detections.length ? "" : "disabled"}>Hide all</button>
         </div>
       </div>
       <div class="review-sheet-body">
@@ -8119,11 +8077,10 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="real-detection-list">${detections.length ? createReviewStepMarkup(detections[reviewIndex], reviewIndex, detections.length) : createDetectionListMarkup(detections)}</div>
         <div class="real-detection-panel-footer">
           <span class="material-symbols-outlined" aria-hidden="true">lock</span>
-          <span data-i18n="editor.localAnalysis">Analysis runs locally in this browser</span>
+          <span>Analysis runs locally in this browser</span>
         </div>
       </div>
     `;
-    applyI18n(sensitiveDataPanel);
     bindReviewPanelCollapse(wasCollapsed);
 
     document.getElementById("reviewPreviousButton")?.addEventListener("click", () => {
@@ -8205,50 +8162,38 @@ document.addEventListener("DOMContentLoaded", () => {
     const warnings = detectionWarnings(detection);
     const navigationDisabled = count < 2 ? "disabled" : "";
     const styleLabels = {
-      blackout: t("label.blackout"),
-      blur: t("editor.blur"),
-      pixelate: t("editor.pixelate"),
-    };
-    const styleKeys = {
-      blackout: "label.blackout",
-      blur: "editor.blur",
-      pixelate: "editor.pixelate",
+      blackout: "Blackout",
+      blur: "Blur",
+      pixelate: "Pixelate",
     };
     return `
       <div class="review-step">
         <div class="review-nav">
-          <button id="reviewPreviousButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewPrevious">${escapeHtml(t("editor.reviewPrevious"))}</button>
-          <span class="review-position">${escapeHtml(t("editor.reviewPosition", { current: index + 1, total: count }))}</span>
-          <button id="reviewNextButton" class="review-nav-button" type="button" ${navigationDisabled} data-i18n="editor.reviewNext">${escapeHtml(t("editor.reviewNext"))}</button>
+          <button id="reviewPreviousButton" class="review-nav-button" type="button" ${navigationDisabled}>Previous</button>
+          <span class="review-position">${escapeHtml(`${index + 1} of ${count}`)}</span>
+          <button id="reviewNextButton" class="review-nav-button" type="button" ${navigationDisabled}>Next</button>
         </div>
         <article class="real-detection-card review-active-card">
           <div class="real-detection-card-heading">
             <strong>${escapeHtml(title)}</strong>
-            ${Number(detection.page) > 0 ? `<span class="real-detection-page-badge">${escapeHtml(t("editor.pdfPageBadge", { page: detection.page }))}</span>` : ""}
-            <span class="real-confidence-badge" data-i18n-title="editor.ocrConfidenceHint" title="${escapeHtml(t("editor.ocrConfidenceHint"))}">${confidence}%</span>
+            ${Number(detection.page) > 0 ? `<span class="real-detection-page-badge">${escapeHtml(`Page ${detection.page}`)}</span>` : ""}
+            <span class="real-confidence-badge" title="${escapeHtml("OCR confidence. This percentage does not prove the value is valid.")}">${confidence}%</span>
           </div>
           <code class="real-detection-text">${escapeHtml(detection.text)}</code>
-          ${warnings.map((warning) => `<p class="real-detection-warning">${escapeHtml(localizeReviewWarning(warning))}</p>`).join("")}
-          <div class="review-style" role="radiogroup" data-i18n-aria="editor.redactionStyle" aria-label="${escapeHtml(t("editor.redactionStyle"))}">
+          ${warnings.map((warning) => `<p class="real-detection-warning">${escapeHtml(warning)}</p>`).join("")}
+          <div class="review-style" role="radiogroup" aria-label="${escapeHtml("Redaction style")}">
             ${["blackout", "blur", "pixelate"].map((style) => `
-              <button type="button" class="review-style-option${editorState.redactionStyle === style ? " is-selected" : ""}" data-redaction-style="${style}" role="radio" aria-checked="${editorState.redactionStyle === style ? "true" : "false"}" data-i18n="${styleKeys[style]}">${escapeHtml(styleLabels[style])}</button>
+              <button type="button" class="review-style-option${editorState.redactionStyle === style ? " is-selected" : ""}" data-redaction-style="${style}" role="radio" aria-checked="${editorState.redactionStyle === style ? "true" : "false"}">${escapeHtml(styleLabels[style])}</button>
             `).join("")}
           </div>
           <div class="review-actions">
-            <button id="reviewRedactButton" class="review-action review-action-redact" type="button" data-i18n="editor.reviewRedact">${escapeHtml(t("editor.reviewRedact"))}</button>
-            <button id="reviewDismissButton" class="review-action" type="button" data-i18n="editor.reviewDismiss">${escapeHtml(t("editor.reviewDismiss"))}</button>
-            <button id="reviewKeepButton" class="review-action" type="button" data-i18n="editor.reviewKeep">${escapeHtml(t("editor.reviewKeep"))}</button>
+            <button id="reviewRedactButton" class="review-action review-action-redact" type="button">Redact</button>
+            <button id="reviewDismissButton" class="review-action" type="button">Dismiss</button>
+            <button id="reviewKeepButton" class="review-action" type="button">Keep Visible</button>
           </div>
         </article>
       </div>
     `;
-  }
-
-  function localizeReviewWarning(warning) {
-    const text = String(warning || "");
-    if (/OCR confidence is low/i.test(text)) return t("editor.ocrConfidenceLow");
-    if (/OCR may have misread/i.test(text)) return t("editor.ocrMayMisread");
-    return text;
   }
 
   function getDetectionSummary(count) {
@@ -8559,9 +8504,8 @@ document.addEventListener("DOMContentLoaded", () => {
     slider.max = String(maximum);
     slider.step = "1";
     slider.value = String(value);
-    slider.setAttribute("aria-label", t(isBlur ? "editor.blurRadius" : "editor.pixelSize"));
-    label.setAttribute("data-i18n", isBlur ? "editor.blur" : "editor.pixel");
-    label.textContent = t(isBlur ? "editor.blur" : "editor.pixel");
+    slider.setAttribute("aria-label", isBlur ? "Blur radius" : "Pixel size");
+    label.textContent = isBlur ? "Blur" : "Pixel";
     output.textContent = `${Math.round(value)}px`;
   }
 
@@ -8644,7 +8588,7 @@ document.addEventListener("DOMContentLoaded", () => {
     menu.setAttribute("role", "dialog");
     menu.setAttribute("aria-label", "Export");
     menu.innerHTML = `
-      <p class="export-menu-title" data-i18n="editor.export">Export</p>
+      <p class="export-menu-title">Export</p>
       <div id="exportImageOptions">
         <div class="export-format-row" role="radiogroup" aria-label="Export format">
           <button type="button" class="export-format-option is-selected" data-export-format="png" role="radio" aria-checked="true">PNG</button>
@@ -8652,20 +8596,19 @@ document.addEventListener("DOMContentLoaded", () => {
           <button type="button" class="export-format-option" data-export-format="jpeg" role="radio" aria-checked="false">JPEG</button>
         </div>
         <label class="export-quality" id="exportQualityField" hidden>
-          <span><span data-i18n="editor.quality">Quality</span> <output id="exportQualityValue">92%</output></span>
+          <span><span>Quality</span> <output id="exportQualityValue">92%</output></span>
           <input id="exportQualitySlider" type="range" min="0.60" max="1" step="0.01" value="0.92" aria-label="Export quality">
         </label>
-        <p class="export-lossless-note" id="exportLosslessNote" data-i18n="editor.lossless">Lossless PNG</p>
+        <p class="export-lossless-note" id="exportLosslessNote">Lossless PNG</p>
       </div>
       <div id="exportPdfOptions" hidden>
-        <p class="export-lossless-note" id="exportPdfModeNote" data-i18n="editor.pdfFlattenNote">
+        <p class="export-lossless-note" id="exportPdfModeNote">
           Rasterizes pages so redacted text cannot be selected or extracted.
         </p>
       </div>
-      <button id="exportConfirmButton" class="export-confirm" type="button" data-i18n="editor.exportImage">Export image</button>
+      <button id="exportConfirmButton" class="export-confirm" type="button">Export image</button>
     `;
     document.body.appendChild(menu);
-    applyI18n(menu);
 
     menu.addEventListener("click", (event) => event.stopPropagation());
     menu.querySelectorAll("[data-export-format]").forEach((button) => {
@@ -8695,15 +8638,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (imageOptions) imageOptions.hidden = isPdf;
     if (pdfOptions) pdfOptions.hidden = !isPdf;
     if (confirm) {
-      if (isPdf) {
-        confirm.setAttribute("data-i18n", "editor.exportPdf");
-        confirm.textContent = t("editor.exportPdf");
-      } else {
-        confirm.setAttribute("data-i18n", "editor.exportImage");
-        confirm.textContent = t("editor.exportImage");
-      }
+      confirm.textContent = isPdf ? "Export PDF" : "Export image";
     }
-    applyI18n(menu);
   }
 
   function toggleExportMenu(anchor) {
@@ -8798,10 +8734,8 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomOutButton.id =
         "editorZoomOutButton";
 
-      zoomOutButton.setAttribute("data-i18n-title", "editor.zoomOut");
-      zoomOutButton.setAttribute("data-i18n-aria", "editor.zoomOut");
-      zoomOutButton.setAttribute("title", t("editor.zoomOut"));
-      zoomOutButton.setAttribute("aria-label", t("editor.zoomOut"));
+      zoomOutButton.setAttribute("title", "Zoom out");
+      zoomOutButton.setAttribute("aria-label", "Zoom out");
 
       zoomOutButton.addEventListener(
         "click",
@@ -8817,10 +8751,8 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomInButton.id =
         "editorZoomInButton";
 
-      zoomInButton.setAttribute("data-i18n-title", "editor.zoomIn");
-      zoomInButton.setAttribute("data-i18n-aria", "editor.zoomIn");
-      zoomInButton.setAttribute("title", t("editor.zoomIn"));
-      zoomInButton.setAttribute("aria-label", t("editor.zoomIn"));
+      zoomInButton.setAttribute("title", "Zoom in");
+      zoomInButton.setAttribute("aria-label", "Zoom in");
 
       zoomInButton.addEventListener(
         "click",
@@ -8836,10 +8768,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fitButton.id =
         "editorFitZoomButton";
 
-      fitButton.setAttribute("data-i18n-title", "editor.fit");
-      fitButton.setAttribute("data-i18n-aria", "editor.fit");
-      fitButton.setAttribute("title", t("editor.fit"));
-      fitButton.setAttribute("aria-label", t("editor.fit"));
+      fitButton.setAttribute("title", "Fit image to screen");
+      fitButton.setAttribute("aria-label", "Fit image to screen");
 
       fitButton.addEventListener(
         "click",
@@ -8855,10 +8785,8 @@ document.addEventListener("DOMContentLoaded", () => {
       resetButton.id =
         "editorResetZoomButton";
 
-      resetButton.setAttribute("data-i18n-title", "editor.resetZoom");
-      resetButton.setAttribute("data-i18n-aria", "editor.resetZoom");
-      resetButton.setAttribute("title", t("editor.resetZoom"));
-      resetButton.setAttribute("aria-label", t("editor.resetZoom"));
+      resetButton.setAttribute("title", "Reset zoom to 100%");
+      resetButton.setAttribute("aria-label", "Reset zoom to 100%");
 
       resetButton.addEventListener(
         "click",
@@ -9680,8 +9608,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     if (label) {
       label.textContent = pageCount > 0
-        ? t("editor.pdfExportProgress", { page, pageCount, percent })
-        : t("editor.pdfExportPreparing");
+        ? `Exporting page ${page} of ${pageCount} (${percent}%)`
+        : "Preparing PDF export…";
     }
   }
 
@@ -9872,10 +9800,10 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const statusMessages = {
-      select: t("editor.statusSelect"),
-      blackout: t("editor.statusBlackout"),
-      blur: t("editor.statusBlur"),
-      pixelate: t("editor.statusPixelate"),
+      select: "Select tool active · Click a region",
+      blackout: "Blackout tool active",
+      blur: "Blur tool active",
+      pixelate: "Pixelate tool active",
     };
 
     updateActiveToolStatus(
